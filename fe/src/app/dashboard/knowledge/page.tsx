@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query/query-keys';
-import { getSchoolKnowledge, syncKnowledgeFromDb, createCustomEntity, deleteCustomEntity } from '@/lib/api/knowledge';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  useSchoolKnowledge,
+  useSyncKnowledge,
+  useCreateCustomEntity,
+  useDeleteCustomEntity
+} from '@/hooks/use-knowledge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { toast } from 'sonner';
-import { JurusanItem, FaqItem, CustomEntity } from '@/lib/schemas';
+import { JurusanItem, FaqItem, CustomEntity, CreateEntitySchema, CreateEntityInput } from '@/lib/schemas';
 import {
   Database,
   GraduationCap,
@@ -26,55 +30,26 @@ import {
 } from 'lucide-react';
 
 export default function KnowledgeDashboardPage() {
-  const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newEntity, setNewEntity] = useState({
-    category: 'PENGUMUMAN',
-    title: '',
-    content: '',
-  });
+
+  const { data: knowledgeResponse, isLoading } = useSchoolKnowledge();
+  const syncMutation = useSyncKnowledge();
+  const createEntityMutation = useCreateCustomEntity();
+  const deleteEntityMutation = useDeleteCustomEntity();
 
   const {
-    data: knowledgeResponse,
-    isLoading,
-  } = useQuery({
-    queryKey: queryKeys.knowledge.detail(),
-    queryFn: getSchoolKnowledge,
-  });
-
-  const syncMutation = useMutation({
-    mutationFn: syncKnowledgeFromDb,
-    onSuccess: (data) => {
-      toast.success(data.message || 'Sinkronisasi basis data PostgreSQL berhasil!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.knowledge.all });
-    },
-    onError: (err: Error) => {
-      toast.error(`Gagal sinkronisasi: ${err.message}`);
-    },
-  });
-
-  const createEntityMutation = useMutation({
-    mutationFn: createCustomEntity,
-    onSuccess: () => {
-      toast.success('Entitas pengetahuan baru berhasil disimpan ke PostgreSQL!');
-      setIsAddModalOpen(false);
-      setNewEntity({ category: 'PENGUMUMAN', title: '', content: '' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.knowledge.all });
-    },
-    onError: (err: Error) => {
-      toast.error(`Gagal menambahkan data: ${err.message}`);
-    },
-  });
-
-  const deleteEntityMutation = useMutation({
-    mutationFn: deleteCustomEntity,
-    onSuccess: () => {
-      toast.success('Entitas pengetahuan berhasil dihapus!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.knowledge.all });
-    },
-    onError: (err: Error) => {
-      toast.error(`Gagal menghapus data: ${err.message}`);
-    },
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm<CreateEntityInput>({
+    resolver: zodResolver(CreateEntitySchema),
+    defaultValues: {
+      category: 'PENGUMUMAN',
+      title: '',
+      content: '',
+      order: 0
+    }
   });
 
   const kData = knowledgeResponse?.data;
@@ -82,13 +57,13 @@ export default function KnowledgeDashboardPage() {
   const faqs = kData?.faq_populer || [];
   const entities = kData?.custom_entities || [];
 
-  const handleCreateEntity = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEntity.title.trim() || !newEntity.content.trim()) {
-      toast.warning('Judul dan konten wajib diisi!');
-      return;
-    }
-    createEntityMutation.mutate(newEntity);
+  const onSubmitEntity = (data: CreateEntityInput) => {
+    createEntityMutation.mutate(data, {
+      onSuccess: () => {
+        setIsAddModalOpen(false);
+        reset();
+      }
+    });
   };
 
   return (
@@ -123,7 +98,7 @@ export default function KnowledgeDashboardPage() {
               Tambah Entitas
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <form onSubmit={handleCreateEntity}>
+              <form onSubmit={handleSubmit(onSubmitEntity)}>
                 <DialogHeader>
                   <DialogTitle className="text-base font-bold">Tambah Entitas Pengetahuan Baru</DialogTitle>
                   <DialogDescription className="text-xs">
@@ -136,20 +111,24 @@ export default function KnowledgeDashboardPage() {
                     <label className="text-xs font-semibold text-foreground">Kategori</label>
                     <Input
                       placeholder="Contoh: BEASISWA, TATA_TERTIB, SERAGAM"
-                      value={newEntity.category}
-                      onChange={(e) => setNewEntity({ ...newEntity, category: e.target.value.toUpperCase() })}
+                      {...register('category')}
                       className="text-xs uppercase"
                     />
+                    {errors.category && (
+                      <p className="text-[11px] text-red-500 font-medium">{errors.category.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-foreground">Judul / Topik</label>
                     <Input
                       placeholder="Contoh: Beasiswa Prestasi Jalur Tahfidz & KIP"
-                      value={newEntity.title}
-                      onChange={(e) => setNewEntity({ ...newEntity, title: e.target.value })}
+                      {...register('title')}
                       className="text-xs"
                     />
+                    {errors.title && (
+                      <p className="text-[11px] text-red-500 font-medium">{errors.title.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -157,10 +136,12 @@ export default function KnowledgeDashboardPage() {
                     <Textarea
                       rows={4}
                       placeholder="Tuliskan detail aturan, rincian biaya, atau jadwal..."
-                      value={newEntity.content}
-                      onChange={(e) => setNewEntity({ ...newEntity, content: e.target.value })}
+                      {...register('content')}
                       className="text-xs resize-none"
                     />
+                    {errors.content && (
+                      <p className="text-[11px] text-red-500 font-medium">{errors.content.message}</p>
+                    )}
                   </div>
                 </div>
 

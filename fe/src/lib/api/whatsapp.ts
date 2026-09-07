@@ -19,6 +19,18 @@ export async function connectWhatsApp(): Promise<{ success: boolean; message: st
   });
 }
 
+export async function disconnectWhatsApp(): Promise<{ success: boolean; message: string }> {
+  return apiClient('/whatsapp/disconnect', {
+    method: 'POST'
+  });
+}
+
+export async function logoutWhatsApp(): Promise<{ success: boolean; message: string }> {
+  return apiClient('/whatsapp/logout', {
+    method: 'POST'
+  });
+}
+
 export async function sendTestWhatsAppMessage(input: SendTestMessageInput): Promise<{ success: boolean; message: string }> {
   return apiClient('/whatsapp/send-test', {
     method: 'POST',

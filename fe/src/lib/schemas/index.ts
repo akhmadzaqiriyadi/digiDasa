@@ -36,19 +36,49 @@ export type SendTestMessageInput = z.infer<typeof SendTestMessageSchema>;
 // 2. Knowledge Base Schemas
 // ==========================================
 export const JurusanItemSchema = z.object({
+  id: z.string().optional(),
   kode: z.string(),
   nama: z.string(),
   akreditasi: z.string().optional().default('A (Unggul)'),
-  kuota_kelas: z.number().optional().default(3),
-  deskripsi: z.string(),
-  keunggulan: z.array(z.string()).optional().default([]),
-  peluang_karir: z.array(z.string()).optional().default([])
+  kuota: z.union([z.number(), z.string()]).optional(),
+  kuota_kelas: z.union([z.number(), z.string()]).optional(),
+  deskripsi: z.string().optional().default(''),
+  prospek_kerja: z.union([z.string(), z.array(z.string())]).optional(),
+  peluang_karir: z.union([z.string(), z.array(z.string())]).optional(),
+  keunggulan: z.union([z.string(), z.array(z.string())]).optional()
+}).transform((val) => {
+  let peluang: string[] = [];
+  if (Array.isArray(val.peluang_karir)) {
+    peluang = val.peluang_karir;
+  } else if (typeof val.peluang_karir === 'string') {
+    peluang = val.peluang_karir.split(',').map((s) => s.trim());
+  } else if (Array.isArray(val.prospek_kerja)) {
+    peluang = val.prospek_kerja;
+  } else if (typeof val.prospek_kerja === 'string') {
+    peluang = val.prospek_kerja.split(',').map((s) => s.trim());
+  }
+
+  let keunggulanList: string[] = [];
+  if (Array.isArray(val.keunggulan)) {
+    keunggulanList = val.keunggulan;
+  } else if (typeof val.keunggulan === 'string') {
+    keunggulanList = val.keunggulan.split(',').map((s) => s.trim());
+  }
+
+  return {
+    ...val,
+    akreditasi: val.akreditasi || 'A (Unggul)',
+    deskripsi: val.deskripsi || '',
+    peluang_karir: peluang,
+    keunggulan: keunggulanList
+  };
 });
 
 export const FaqItemSchema = z.object({
   id: z.string().optional(),
   q: z.string(),
   a: z.string(),
+  category: z.string().optional(),
   order: z.number().optional()
 });
 
@@ -57,6 +87,7 @@ export const CustomEntitySchema = z.object({
   category: z.string(),
   title: z.string(),
   content: z.string(),
+  tags: z.string().optional(),
   isActive: z.boolean().default(true),
   order: z.number().default(0),
   createdAt: z.string().optional(),
@@ -64,9 +95,11 @@ export const CustomEntitySchema = z.object({
 });
 
 export const SchoolInfoSchema = z.object({
-  name: z.string(),
-  address: z.string(),
-  academic_year: z.string(),
+  name: z.string().optional(),
+  address: z.string().optional(),
+  academic_year: z.string().optional(),
+  last_updated: z.string().optional(),
+  sk_number: z.string().optional(),
   contact: z.object({
     phone: z.string().optional(),
     spmb_whatsapp: z.string().optional(),
@@ -76,17 +109,46 @@ export const SchoolInfoSchema = z.object({
 });
 
 export const SchoolKnowledgeSchema = z.object({
-  school_info: SchoolInfoSchema,
-  jurusans: z.array(JurusanItemSchema),
-  faq_populer: z.array(FaqItemSchema),
+  school_info: SchoolInfoSchema.optional(),
+  jurusan: z.array(JurusanItemSchema).optional(),
+  jurusans: z.array(JurusanItemSchema).optional(),
+  biaya: z.any().optional(),
+  jadwal_spmb_2026: z.any().optional(),
+  jalur_pendaftaran: z.any().optional(),
+  syarat_dokumen: z.any().optional(),
+  faq_populer: z.array(FaqItemSchema).optional().default([]),
   custom_entities: z.array(CustomEntitySchema).optional().default([])
+}).transform((val) => {
+  const items = val.jurusan || val.jurusans || [];
+  return {
+    ...val,
+    school_info: val.school_info || {
+      name: 'SMK Negeri 1 Adiwerna (STM ADB)',
+      address: 'Jl. Raya Singkil No. 1, Adiwerna, Kab. Tegal, Jawa Tengah',
+      academic_year: '2026/2027'
+    },
+    jurusans: items,
+    jurusan: items,
+    faq_populer: val.faq_populer || [],
+    custom_entities: val.custom_entities || []
+  };
 });
 
 export const SchoolKnowledgeResponseSchema = z.object({
   success: z.boolean(),
-  data: SchoolKnowledgeSchema
+  message: z.string().optional(),
+  data: SchoolKnowledgeSchema,
+  timestamp: z.string().optional()
 });
 
+export const CreateEntitySchema = z.object({
+  category: z.string().min(2, 'Kategori minimal 2 karakter'),
+  title: z.string().min(3, 'Judul minimal 3 karakter'),
+  content: z.string().min(5, 'Konten minimal 5 karakter'),
+  order: z.number().optional()
+});
+
+export type CreateEntityInput = z.infer<typeof CreateEntitySchema>;
 export type SchoolKnowledgeResponse = z.infer<typeof SchoolKnowledgeResponseSchema>;
 export type JurusanItem = z.infer<typeof JurusanItemSchema>;
 export type FaqItem = z.infer<typeof FaqItemSchema>;

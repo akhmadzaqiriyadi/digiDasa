@@ -42,4 +42,5 @@ apiRouter.post('/tickets/:id/resolve', ChatController.resolveTicket);
 apiRouter.get('/whatsapp/status', WhatsAppController.getStatus);
 apiRouter.post('/whatsapp/connect', WhatsAppController.connect);
 apiRouter.post('/whatsapp/disconnect', WhatsAppController.disconnect);
+apiRouter.post('/whatsapp/logout', WhatsAppController.logout);
 apiRouter.post('/whatsapp/send-test', WhatsAppController.sendTestMessage);

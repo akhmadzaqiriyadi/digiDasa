@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query/query-keys';
-import { getTickets, resolveTicket } from '@/lib/api/tickets';
+import { useTickets, useResolveTicket } from '@/hooks/use-tickets';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
 import {
   Ticket,
   CheckCircle2,
@@ -22,7 +19,6 @@ import {
 } from 'lucide-react';
 
 export default function TicketsDashboardPage() {
-  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
   const {
@@ -30,23 +26,9 @@ export default function TicketsDashboardPage() {
     isLoading,
     isRefetching,
     refetch
-  } = useQuery({
-    queryKey: queryKeys.tickets.list(filterStatus),
-    queryFn: () => getTickets(filterStatus),
-    refetchInterval: 5000,
-  });
+  } = useTickets(filterStatus);
 
-  const resolveMutation = useMutation({
-    mutationFn: resolveTicket,
-    onSuccess: (data) => {
-      toast.success(data.message || 'Tiket berhasil diselesaikan panitia!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.tickets.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.system.all });
-    },
-    onError: (err: Error) => {
-      toast.error(`Gagal menyelesaikan tiket: ${err.message}`);
-    }
-  });
+  const resolveMutation = useResolveTicket();
 
   return (
     <div className="space-y-6">

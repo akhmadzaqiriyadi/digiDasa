@@ -6,12 +6,10 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, LayoutDashboard, Database, Ticket, ExternalLink } from 'lucide-react';
+import { MessageSquare, Database, Ticket, ExternalLink } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
-
-  const isDashboard = pathname.startsWith('/dashboard');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -52,17 +50,6 @@ export function Navbar() {
             }`}
           >
             Portal Publik
-          </Link>
-          <Link
-            href="/dashboard"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center gap-1.5 ${
-              isDashboard && pathname === '/dashboard'
-                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Dashboard Bot
           </Link>
           <Link
             href="/dashboard/whatsapp"

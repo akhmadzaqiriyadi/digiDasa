@@ -2,10 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query/query-keys';
-import { getSystemStatus } from '@/lib/api/tickets';
-import { getWhatsAppStatus } from '@/lib/api/whatsapp';
+import { useSystemStatus } from '@/hooks/use-tickets';
+import { useWhatsAppStatus } from '@/hooks/use-whatsapp';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,17 +20,8 @@ import {
 } from 'lucide-react';
 
 export default function DashboardOverviewPage() {
-  const { data: status, isLoading: isStatusLoading } = useQuery({
-    queryKey: queryKeys.system.status(),
-    queryFn: getSystemStatus,
-    refetchInterval: 5000,
-  });
-
-  const { data: waStatus, isLoading: isWaLoading } = useQuery({
-    queryKey: queryKeys.whatsapp.status(),
-    queryFn: getWhatsAppStatus,
-    refetchInterval: 4000,
-  });
+  const { data: status, isLoading: isStatusLoading } = useSystemStatus();
+  const { data: waStatus, isLoading: isWaLoading } = useWhatsAppStatus();
 
   const isWaConnected = waStatus?.data.ready || waStatus?.data.status === 'CONNECTED';
 

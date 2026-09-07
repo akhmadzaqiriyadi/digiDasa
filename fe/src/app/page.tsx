@@ -3,9 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query/query-keys';
-import { getSchoolKnowledge } from '@/lib/api/knowledge';
+import { useSchoolKnowledge } from '@/hooks/use-knowledge';
 import { Navbar } from '@/components/common/navbar';
 import { Footer } from '@/components/common/footer';
 import { Button } from '@/components/ui/button';
@@ -24,10 +22,7 @@ import {
 import { JurusanItem, FaqItem } from '@/lib/schemas';
 
 export default function PublicLandingPage() {
-  const { data: knowledgeResponse, isLoading } = useQuery({
-    queryKey: queryKeys.knowledge.detail(),
-    queryFn: getSchoolKnowledge,
-  });
+  const { data: knowledgeResponse, isLoading } = useSchoolKnowledge();
 
   const kData = knowledgeResponse?.data;
   const jurusans = kData?.jurusans || [];
@@ -176,17 +171,21 @@ export default function PublicLandingPage() {
                       </CardDescription>
                     </CardHeader>
 
-                    <CardContent className="pt-0 text-xs space-y-3">
-                      {j.keunggulan && j.keunggulan.length > 0 && (
+                    <CardContent className="pt-0 text-xs space-y-2.5">
+                      {j.peluang_karir && j.peluang_karir.length > 0 && (
                         <div className="border-t border-border/50 pt-2.5">
                           <span className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Keunggulan TEFA:
+                            Prospek Karir Lulusan:
                           </span>
-                          <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
-                            {j.keunggulan.slice(0, 2).map((k: string, idx: number) => (
-                              <li key={idx}>• {k}</li>
-                            ))}
-                          </ul>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                            {j.peluang_karir.slice(0, 3).join(', ')}
+                          </p>
+                        </div>
+                      )}
+                      {j.kuota && (
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-border/30">
+                          <span>Daya Tampung:</span>
+                          <span className="font-semibold text-foreground">{j.kuota} Siswa</span>
                         </div>
                       )}
                     </CardContent>

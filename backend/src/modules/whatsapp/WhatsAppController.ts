@@ -41,6 +41,19 @@ export class WhatsAppController {
     }
   }
 
+  public static async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await whatsAppProvider.logout();
+      ApiResponse.success(
+        res,
+        whatsAppProvider.getStatus(),
+        'Sesi WhatsApp berhasil keluar (logout) dan kredensial lokal dibersihkan.'
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
   public static async sendTestMessage(
     req: Request,
     res: Response,

@@ -61,6 +61,32 @@ export class WhatsAppProvider extends EventEmitter {
     }
   }
 
+  public async logout(): Promise<void> {
+    if (this.client) {
+      try {
+        await this.client.logout().catch(() => {});
+        await this.client.destroy().catch(() => {});
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error('[WhatsAppProvider] Logout error: ' + msg);
+      }
+    }
+    this.client = null;
+    this.isReady = false;
+    this.status = 'DISCONNECTED';
+    this.currentQrCode = null;
+    this.currentQrDataUrl = null;
+    if (fs.existsSync('./.wwebjs_auth')) {
+      try {
+        fs.rmSync('./.wwebjs_auth', { recursive: true, force: true });
+      } catch (e) {
+        logger.warn('[WhatsAppProvider] Could not remove auth folder: ' + e);
+      }
+    }
+    logger.info('[WhatsAppProvider] WhatsApp session logged out and auth data cleared.');
+    this.emit('status', this.status);
+  }
+
   public init(): void {
     if (this.client) {
       logger.warn('[WhatsAppProvider] Client already initialized.');

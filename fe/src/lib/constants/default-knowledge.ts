@@ -1,0 +1,234 @@
+export const DEFAULT_SCHOOL_KNOWLEDGE = {
+  success: true,
+  message: "Data informasi sekolah (Fallback Offline Data)",
+  data: {
+    school_info: {
+      name: "SMK Negeri 1 Adiwerna (STM ADB)",
+      address: "Jl. Raya Singkil No. 1, Adiwerna, Kab. Tegal, Jawa Tengah",
+      academic_year: "2026/2027",
+      contact: {
+        phone: "(0283) 443768",
+        spmb_whatsapp: "6285292677431",
+        email: "info@smkn1adiwerna.sch.id",
+        website: "https://smkn1adiwerna.sch.id"
+      },
+      last_updated: "2 September 2026",
+      sk_number: "SK/SPMB/2026/042-ADB-REV"
+    },
+    jurusan: [
+      {
+        id: "329ab05a-7ac6-4429-a4e2-fc96ee82d5cf",
+        kode: "DPIB",
+        nama: "Desain Pemodelan dan Informasi Bangunan (Arsitektur/Sipil)",
+        kuota: 72,
+        deskripsi: "Fokus pada gambar kerja arsitektur, CAD 2D/3D, estimasi biaya konstruksi (RAB), dan teknologi BIM.",
+        prospek_kerja: "Drafter Arsitektur/Struktur, Estimator RAB Proyek, Pengawas Lapangan, Surveyor."
+      },
+      {
+        id: "c249030b-63bf-4623-8280-d8df9abdf410",
+        kode: "RPL",
+        nama: "Rekayasa Perangkat Lunak & Cognitive AI",
+        kuota: 72,
+        deskripsi: "Pemrograman Web, Mobile, Cloud, dan AI Automation.",
+        prospek_kerja: "Software Engineer, AI Developer"
+      },
+      {
+        id: "85ba8bfe-8809-4f4b-ba51-63580461d1fd",
+        kode: "TITL",
+        nama: "Teknik Instalasi Tenaga Listrik",
+        kuota: 72,
+        deskripsi: "Fokus pada instalasi penerangan gedung, instalasi tenaga industri, otomasi PLC, dan perbaikan motor listrik.",
+        prospek_kerja: "Teknisi Listrik Industri, Kontraktor Instalasi Listrik, Teknisi Otomasi PLC."
+      },
+      {
+        id: "654b575d-d5f6-4a1d-8b8b-00bf5fc08e37",
+        kode: "TKJ",
+        nama: "Teknik Komputer dan Jaringan (Network Engineering)",
+        kuota: 108,
+        deskripsi: "Fokus pada instalasi jaringan komputer, mikrotik, fiber optic, server administration, dan cybersecurity.",
+        prospek_kerja: "Network Administrator, Technical Support, Cloud & Server Admin, Cyber Security Junior."
+      },
+      {
+        id: "73ab4eca-e533-4081-af93-83a2ac0bf881",
+        kode: "TKR",
+        nama: "Teknik Kendaraan Ringan Otomotif",
+        kuota: 108,
+        deskripsi: "Fokus pada perawatan dan perbaikan mesin kendaraan roda 4, sistem kelistrikan otomotif, EFI, dan transmisi modern.",
+        prospek_kerja: "Mekanik Otomotif Industri, Teknisi Service Dealer Resmi, Wirausaha Bengkel Mandiri."
+      },
+      {
+        id: "333837a7-eff9-43eb-80cc-4355e69e23fa",
+        kode: "TPM",
+        nama: "Teknik Pemesinan",
+        kuota: 108,
+        deskripsi: "Fokus pada pengoperasian mesin bubut, milling, gerinda presisi, serta perancangan CAM/CNC modern.",
+        prospek_kerja: "Operator CNC, Toolmaker Manufaktur, Quality Control Presisi Mesin, Drafter Mekanikal."
+      }
+    ],
+    biaya: {
+      spp_bulanan: {
+        nominal: 0,
+        keterangan: "GRATIS / Bebas SPP Bulanan (Ditanggung Pemerintah Provinsi Jawa Tengah)."
+      },
+      daftar_ulang: {
+        nominal: 0,
+        keterangan: "Daftar ulang online dan fisik TIDAK DIPUNGUT BIAYA (Gratis)."
+      },
+      paket_seragam_dan_kelengkapan: {
+        total_putra: 750000,
+        total_putri: 790000,
+        opsi_pembayaran: "Dapat diangsur 2x atau dibeli mandiri sesuai standar spesifikasi sekolah.",
+        rincian_item: [
+          "Kain Seragam Abu-Abu Putih (1 Stel)",
+          "Kain Seragam Pramuka Lengkap (1 Stel)",
+          "Seragam Praktik / Wearpack Khusus Jurusan (1 Stel)",
+          "Kaos Olahraga Lengkap (1 Stel)",
+          "Atribut Lengkap: Topi, Dasi, Sabuk, Lokasi Bordir Sekolah, Badge Jurusan",
+          "Jilbab khusus siswi putri (3 buah: Putih, Coklat, Hitam)"
+        ]
+      },
+      keringanan_dan_beasiswa: "Bagi keluarga pemegang KIP / PIP / PKH / Terdaftar DTKS, seragam dibantu melalui program Keringanan Koperasi Sekolah & Baznas Sekolah."
+    },
+    jadwal_spmb_2026: [
+      {
+        id: "dc08e030-c432-456d-b4b0-53e52fc4f18c",
+        tahap: "Sosialisasi & Pembuatan Akun Online",
+        tanggal: "15 Mei - 10 Juni 2026",
+        tempat: "Portal Resmi SPMB Jateng & SMK Negeri 1 Adiwerna"
+      },
+      {
+        id: "75d89f48-4dbc-4310-b0ca-c9f6580a6501",
+        tahap: "Verifikasi Berkas Fisik & Tes Khusus / Minat Bakat",
+        tanggal: "12 Juni - 24 Juni 2026 (Pukul 08.00 - 14.00 WIB)",
+        tempat: "Aula Graha SMK Negeri 1 Adiwerna"
+      },
+      {
+        id: "515ada4f-779a-468d-8f70-c671214dce52",
+        tahap: "Pendaftaran Online & Pemilihan Jurusan",
+        tanggal: "26 Juni - 30 Juni 2026 (24 Jam Online)",
+        tempat: "https://spmb.jatengprov.go.id"
+      },
+      {
+        id: "56694cef-2da6-4b8e-b0b0-26c96890b6a4",
+        tahap: "Pengumuman Hasil Seleksi",
+        tanggal: "3 Juli 2026 (Pukul 13.00 WIB)",
+        tempat: "Website Resmi & Papan Pengumuman Sekolah"
+      },
+      {
+        id: "fc6e2ce8-83be-4e8c-b2da-065aad1332fb",
+        tahap: "Daftar Ulang Siswa Diterima",
+        tanggal: "6 Juli - 10 Juli 2026",
+        tempat: "Loket SPMB SMK Negeri 1 Adiwerna"
+      },
+      {
+        id: "d5c0ab81-51cc-40c9-b636-0e8105f1edb5",
+        tahap: "Awal Masuk Sekolah & MPLS",
+        tanggal: "13 Juli 2026",
+        tempat: "Lapangan Utama SMK Negeri 1 Adiwerna"
+      }
+    ],
+    jalur_pendaftaran: [
+      {
+        id: "e6db6d6d-b1de-4576-a97d-52f870d3279e",
+        jalur: "Jalur Prestasi",
+        kuota_persen: "75%",
+        syarat: "Nilai rapor semester 1-5 dan sertifikat kejuaraan akademik/non-akademik (jika ada)."
+      },
+      {
+        id: "9746c6fd-e10c-4059-bc3d-4c5cbb3ca582",
+        jalur: "Jalur Afirmasi (Keluarga Tidak Mampu & Anak Nakes/Panti)",
+        kuota_persen: "15%",
+        syarat: "Terdaftar dalam DTKS / KIP / PKH / KKS aktif."
+      },
+      {
+        id: "d3db2957-c733-44de-9ffe-d42e5f72d7ad",
+        jalur: "Jalur Domisili Terdekat",
+        kuota_persen: "10%",
+        syarat: "Kartu Keluarga (KK) yang diterbitkan minimal 1 tahun di kecamatan sekitar sekolah."
+      }
+    ],
+    syarat_dokumen: [
+      "Buku Rapor SMP/MTs (Semester 1 s.d 5 Asli & Legalisir)",
+      "Surat Keterangan Nilai Rapor dari SMP asal",
+      "Ijazah / Surat Keterangan Lulus (SKL) Asli",
+      "Akta Kelahiran Asli & Fotokopi (usia maksimal 21 tahun per 1 Juli 2026)",
+      "Kartu Keluarga (KK) Asli & Fotokopi",
+      "Piagam/Sertifikat Kejuaraan Asli (bagi pendaftar jalur prestasi kejuaraan)",
+      "KIP / PKH / Bukti DTKS (bagi pendaftar jalur afirmasi)",
+      "Surat Pernyataan Sehat & Tidak Buta Warna (khusus jurusan teknik)"
+    ],
+    faq_populer: [
+      {
+        id: "8fb2c3af-4937-486c-b16a-dd888fd30eb3",
+        q: "Apakah sekolah di SMK Negeri 1 Adiwerna ada SPP bulanan?",
+        a: "Tidak ada. SPP bulanan di SMK Negeri 1 Adiwerna 100% GRATIS dan bebas biaya uang gedung karena disubsidi oleh Pemprov Jawa Tengah.",
+        category: "SPMB"
+      },
+      {
+        id: "902c5fe9-b3a3-4faf-838c-ed5e34f7d9ad",
+        q: "Apakah boleh mengangsur pembayaran seragam?",
+        a: "Bisa. Pembayaran seragam melalui Koperasi Sekolah dapat diangsur sesuai kesepakatan orang tua murid.",
+        category: "SPMB"
+      },
+      {
+        id: "4676d3f6-3658-4b73-bf47-740112daa154",
+        q: "Apakah jurusan teknik boleh untuk siswa berkacamata / buta warna?",
+        a: "Siswa berkacamata diperbolehkan. Namun untuk jurusan teknik (RPL, TKJ, Listrik, Mesin, Otomotif) disyaratkan tidak buta warna parsial/total demi keselamatan kerja.",
+        category: "SPMB"
+      },
+      {
+        id: "e70452ee-f3b4-4a1e-9108-d07b6336b265",
+        q: "Bagaimana jika butuh bantuan khusus atau ada berkas bermasalah?",
+        a: "Orang tua murid dapat langsung menghubungi tim panitia SPMB melalui WhatsApp admin di nomor 0812-3456-7890 pada hari & jam kerja.",
+        category: "SPMB"
+      }
+    ],
+    custom_entities: [
+      {
+        id: "c6cc29af-34b8-4d01-b3df-7407eefdf993",
+        category: "KERJASAMA_INDUSTRI",
+        title: "Kelas Industri Daihatsu & Komatsu",
+        content: "SMK Negeri 1 Adiwerna bekerjasama resmi dengan PT Astra Daihatsu Motor (PINTAR Bersama Daihatsu) dan PT Komatsu Indonesia untuk kurikulum sinkronisasi industri, penyediaan unit praktik modern, serta perekrutan kerja langsung setelah lulus.",
+        tags: "daihatsu, komatsu, astra, industri, kerja",
+        order: 1,
+        isActive: true,
+        createdAt: "2026-09-07T04:16:53.149Z",
+        updatedAt: "2026-09-07T04:16:53.149Z"
+      },
+      {
+        id: "4236dbd4-7872-4aa9-841b-e7c19109c22d",
+        category: "MAGANG_LUAR_NEGERI",
+        title: "Program Magang & Penempatan Kerja ke Jepang",
+        content: "Tersedia program akselerasi pelatihan bahasa & budaya Jepang serta penempatan magang kerja industri manufaktur dan otomasi di Jepang bekerjasama dengan LPK resmi terakreditasi Kemnaker.",
+        tags: "jepang, magang, luar negeri, karir",
+        order: 2,
+        isActive: true,
+        createdAt: "2026-09-07T04:16:53.150Z",
+        updatedAt: "2026-09-07T04:16:53.150Z"
+      },
+      {
+        id: "13ebc9f5-05a9-4d95-b27c-704878658c4e",
+        category: "BEASISWA",
+        title: "Beasiswa Tahfidz & Prestasi Akademik",
+        content: "Sekolah memberikan apresiasi pembebasan biaya perlengkapan dan seragam bagi siswa penghafal Al-Quran minimal 3 Juz serta peraih medali kejuaraan LKS (Lomba Kompetensi Siswa) tingkat provinsi/nasional.",
+        tags: "beasiswa, tahfidz, prestasi, lks",
+        order: 3,
+        isActive: true,
+        createdAt: "2026-09-07T04:16:53.150Z",
+        updatedAt: "2026-09-07T04:16:53.150Z"
+      },
+      {
+        id: "94e81ef5-97f9-4504-8846-b4f3c6f2926c",
+        category: "EKSTRAKURIKULER",
+        title: "Ekstrakurikuler Unggulan Robotika & IT Club",
+        content: "Mengakomodasi minat siswa dalam riset IoT, mikrokontroler Arduino/ESP32, Cognitive AI automation, cyber security, dan competitive programming dengan mentor praktisi industri.",
+        tags: "robotik, it, iot, ai, ekskul",
+        order: 4,
+        isActive: true,
+        createdAt: "2026-09-07T04:16:53.151Z",
+        updatedAt: "2026-09-07T04:16:53.151Z"
+      }
+    ]
+  },
+  timestamp: "2026-09-07T05:50:40.599Z"
+};

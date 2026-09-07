@@ -1,9 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query/query-keys';
-import { getWhatsAppStatus, connectWhatsApp, sendTestWhatsAppMessage } from '@/lib/api/whatsapp';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  useWhatsAppStatus,
+  useConnectWhatsApp,
+  useDisconnectWhatsApp,
+  useLogoutWhatsApp,
+  useSendTestWhatsAppMessage
+} from '@/hooks/use-whatsapp';
+import { SendTestMessageSchema, SendTestMessageInput } from '@/lib/schemas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
-import { toast } from 'sonner';
 import {
   MessageSquare,
   QrCode,
@@ -22,43 +28,34 @@ import {
   AlertCircle,
   Smartphone,
   ShieldCheck,
-  Zap
+  Zap,
+  LogOut,
+  PowerOff
 } from 'lucide-react';
 
 export default function WhatsAppDashboardPage() {
-  const queryClient = useQueryClient();
-  const [targetNumber, setTargetNumber] = useState('');
-  const [testMessage, setTestMessage] = useState('Halo! Ini pesan pengujian koneksi dari ADAPTIVA-BOT SMK Negeri 1 Adiwerna.');
-
   const {
     data: waResponse,
     isLoading,
     isRefetching,
     refetch
-  } = useQuery({
-    queryKey: queryKeys.whatsapp.status(),
-    queryFn: getWhatsAppStatus,
-    refetchInterval: 3000, // Poll every 3 seconds for QR updates
-  });
+  } = useWhatsAppStatus(3000);
 
-  const connectMutation = useMutation({
-    mutationFn: connectWhatsApp,
-    onSuccess: (data) => {
-      toast.success(data.message || 'Inisialisasi koneksi WhatsApp berhasil.');
-      queryClient.invalidateQueries({ queryKey: queryKeys.whatsapp.all });
-    },
-    onError: (err: Error) => {
-      toast.error(`Gagal menghubungkan: ${err.message}`);
-    }
-  });
+  const connectMutation = useConnectWhatsApp();
+  const disconnectMutation = useDisconnectWhatsApp();
+  const logoutMutation = useLogoutWhatsApp();
+  const sendTestMutation = useSendTestWhatsAppMessage();
 
-  const sendTestMutation = useMutation({
-    mutationFn: sendTestWhatsAppMessage,
-    onSuccess: (data) => {
-      toast.success(data.message || 'Pesan uji coba berhasil dikirim!');
-    },
-    onError: (err: Error) => {
-      toast.error(`Gagal mengirim pesan: ${err.message}`);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm<SendTestMessageInput>({
+    resolver: zodResolver(SendTestMessageSchema),
+    defaultValues: {
+      targetNumber: '',
+      text: 'Halo! Ini pesan pengujian koneksi dari ADAPTIVA-BOT SMK Negeri 1 Adiwerna.'
     }
   });
 
@@ -67,20 +64,20 @@ export default function WhatsAppDashboardPage() {
   const qrString = waResponse?.data.qr;
   const pairingCode = waResponse?.data.pairingCode;
 
-  const handleSendTest = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!targetNumber.trim()) {
-      toast.warning('Silakan masukkan nomor telepon tujuan!');
-      return;
-    }
-    if (!testMessage.trim()) {
-      toast.warning('Silakan tuliskan isi pesan uji coba!');
-      return;
-    }
-    sendTestMutation.mutate({
-      targetNumber,
-      text: testMessage
+  const onSubmit = (data: SendTestMessageInput) => {
+    sendTestMutation.mutate(data, {
+      onSuccess: () => reset()
     });
+  };
+
+  const handleLogout = () => {
+    if (confirm('Apakah Anda yakin ingin keluar dari sesi WhatsApp ini? File auth session akan dibersihkan dan Anda perlu scan QR ulang.')) {
+      logoutMutation.mutate();
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnectMutation.mutate();
   };
 
   return (
@@ -100,18 +97,18 @@ export default function WhatsAppDashboardPage() {
         {/* Left Column: QR Code & Connection Status */}
         <div className="lg:col-span-7 space-y-6">
           <Card className="border-border/80 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <QrCode className="h-4 w-4 text-orange-500" />
-                  Status Sesi & Autentikasi
+                  Status &amp; Sesi WhatsApp Gateway
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Scan QR code menggunakan aplikasi WhatsApp di HP panitia
                 </CardDescription>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -121,6 +118,26 @@ export default function WhatsAppDashboardPage() {
                 >
                   <RefreshCw className={`h-3 w-3 ${isRefetching ? 'animate-spin' : ''}`} />
                   Refresh
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDisconnect}
+                  disabled={disconnectMutation.isPending}
+                  className="text-xs gap-1 text-amber-600 hover:text-amber-700"
+                >
+                  <PowerOff className="h-3 w-3" />
+                  Putuskan Sambungan
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                  className="text-xs gap-1"
+                >
+                  <LogOut className="h-3 w-3" />
+                  Keluar Sesi WA (Logout)
                 </Button>
               </div>
             </CardHeader>
@@ -132,22 +149,36 @@ export default function WhatsAppDashboardPage() {
                   <Skeleton className="h-4 w-32" />
                 </div>
               ) : isConnected ? (
-                <div className="flex flex-col items-center text-center py-8 space-y-3">
+                <div className="flex flex-col items-center text-center py-8 space-y-4">
                   <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                     <CheckCircle2 className="h-10 w-10" />
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-foreground">
-                      WhatsApp Gateway Terhubung & Siap
+                      WhatsApp Gateway Terhubung &amp; Siap
                     </h3>
                     <p className="text-xs text-muted-foreground max-w-sm mt-1">
                       Nomor resmi panitia SPMB aktif melayani konsultasi pendaftar 24 jam nonstop.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 pt-2">
+                  <div className="flex items-center gap-2 pt-1">
                     <Badge className="bg-emerald-600 text-white text-xs px-3 py-1">
                       SESI TEROTENTIKASI (LocalAuth)
                     </Badge>
+                  </div>
+
+                  {/* Tombol Keluar Sesi WA */}
+                  <div className="pt-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleLogout}
+                      disabled={logoutMutation.isPending}
+                      className="text-xs gap-1.5"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      {logoutMutation.isPending ? 'Mengeluarkan sesi...' : 'Keluar Sesi WA (Logout)'}
+                    </Button>
                   </div>
                 </div>
               ) : qrString ? (
@@ -213,7 +244,7 @@ export default function WhatsAppDashboardPage() {
           </Card>
         </div>
 
-        {/* Right Column: Send Test Message Form */}
+        {/* Right Column: Send Test Message Form via React Hook Form */}
         <div className="lg:col-span-5 space-y-6">
           <Card className="border-border/80 shadow-sm">
             <CardHeader>
@@ -226,7 +257,7 @@ export default function WhatsAppDashboardPage() {
               </CardDescription>
             </CardHeader>
 
-            <form onSubmit={handleSendTest}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <CardContent className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">
@@ -235,10 +266,14 @@ export default function WhatsAppDashboardPage() {
                   <Input
                     type="text"
                     placeholder="Contoh: 628123456789 atau 08123456789"
-                    value={targetNumber}
-                    onChange={(e) => setTargetNumber(e.target.value)}
+                    {...register('targetNumber')}
                     className="text-xs"
                   />
+                  {errors.targetNumber && (
+                    <p className="text-[11px] text-red-500 font-medium">
+                      {errors.targetNumber.message}
+                    </p>
+                  )}
                   <span className="text-[10px] text-muted-foreground">
                     Format nomor dapat menggunakan awalan 08... atau 628...
                   </span>
@@ -251,10 +286,14 @@ export default function WhatsAppDashboardPage() {
                   <Textarea
                     rows={4}
                     placeholder="Tuliskan pesan..."
-                    value={testMessage}
-                    onChange={(e) => setTestMessage(e.target.value)}
+                    {...register('text')}
                     className="text-xs resize-none"
                   />
+                  {errors.text && (
+                    <p className="text-[11px] text-red-500 font-medium">
+                      {errors.text.message}
+                    </p>
+                  )}
                 </div>
               </CardContent>
 
