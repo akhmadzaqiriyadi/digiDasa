@@ -1,32 +1,87 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSchoolKnowledge } from '@/hooks/use-knowledge';
 import { Navbar } from '@/components/common/navbar';
 import { Footer } from '@/components/common/footer';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Pagination } from '@/components/common/pagination';
 import {
   MessageSquare,
   ShieldCheck,
   Zap,
   GraduationCap,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Search,
+  X,
+  Filter
 } from 'lucide-react';
 import { JurusanItem, FaqItem } from '@/lib/schemas';
 
 export default function PublicLandingPage() {
   const { data: knowledgeResponse, isLoading } = useSchoolKnowledge();
 
+  const [searchJurusan, setSearchJurusan] = useState('');
+  const [jurusanPage, setJurusanPage] = useState(1);
+  const JURUSAN_PER_PAGE = 6;
+
+  const [searchFaq, setSearchFaq] = useState('');
+  const [faqCategory, setFaqCategory] = useState('ALL');
+  const [faqPage, setFaqPage] = useState(1);
+  const FAQ_PER_PAGE = 5;
+
   const kData = knowledgeResponse?.data;
-  const jurusans = kData?.jurusans || [];
-  const faqs = kData?.faq_populer || [];
+  const jurusans = useMemo(() => kData?.jurusans || [], [kData]);
+  const faqs = useMemo(() => kData?.faq_populer || [], [kData]);
+
+  const filteredJurusans = useMemo(() => {
+    const q = searchJurusan.toLowerCase().trim();
+    if (!q) return jurusans;
+    return jurusans.filter((j) =>
+      j.nama.toLowerCase().includes(q) ||
+      j.kode.toLowerCase().includes(q) ||
+      (j.deskripsi && j.deskripsi.toLowerCase().includes(q)) ||
+      (j.peluang_karir && j.peluang_karir.some((p) => p.toLowerCase().includes(q)))
+    );
+  }, [jurusans, searchJurusan]);
+
+  const totalJurusanPages = Math.ceil(filteredJurusans.length / JURUSAN_PER_PAGE) || 1;
+  const paginatedJurusans = filteredJurusans.slice(
+    (jurusanPage - 1) * JURUSAN_PER_PAGE,
+    jurusanPage * JURUSAN_PER_PAGE
+  );
+
+  const faqCategories = useMemo(() => {
+    const cats = new Set<string>();
+    faqs.forEach((f) => {
+      if (f.category) cats.add(f.category);
+    });
+    return Array.from(cats);
+  }, [faqs]);
+
+  const filteredFaqs = useMemo(() => {
+    const q = searchFaq.toLowerCase().trim();
+    return faqs.filter((f) => {
+      const matchCat = faqCategory === 'ALL' || f.category === faqCategory;
+      if (!matchCat) return false;
+      if (!q) return true;
+      return f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q);
+    });
+  }, [faqs, searchFaq, faqCategory]);
+
+  const totalFaqPages = Math.ceil(filteredFaqs.length / FAQ_PER_PAGE) || 1;
+  const paginatedFaqs = filteredFaqs.slice(
+    (faqPage - 1) * FAQ_PER_PAGE,
+    faqPage * FAQ_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -132,7 +187,7 @@ export default function PublicLandingPage() {
         {/* 3. 9 Jurusan Kejuruan Section */}
         <section id="jurusan" className="py-14 sm:py-20 border-b border-border/40 scroll-mt-16">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+            <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
               <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-xs">
                 Konsentrasi Keahlian
               </Badge>
@@ -144,54 +199,108 @@ export default function PublicLandingPage() {
               </p>
             </div>
 
+            {/* Search Jurusan */}
+            <div className="max-w-md mx-auto mb-8">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari jurusan (e.g. Mesin, Arsitektur, Otomotif, Listrik)..."
+                  value={searchJurusan}
+                  onChange={(e) => {
+                    setSearchJurusan(e.target.value);
+                    setJurusanPage(1);
+                  }}
+                  className="pl-10 pr-9 text-xs h-10 shadow-xs"
+                />
+                {searchJurusan && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchJurusan('');
+                      setJurusanPage(1);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
                   <Skeleton key={i} className="h-48 w-full rounded-xl" />
                 ))}
               </div>
+            ) : filteredJurusans.length === 0 ? (
+              <Card className="border-dashed p-10 text-center text-muted-foreground max-w-md mx-auto">
+                <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <h4 className="text-sm font-bold text-foreground">Jurusan Tidak Ditemukan</h4>
+                <p className="text-xs mt-1">Tidak ada jurusan dengan kata kunci &ldquo;{searchJurusan}&rdquo;</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchJurusan('')}
+                  className="mt-3 text-xs"
+                >
+                  Hapus Pencarian
+                </Button>
+              </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {jurusans.map((j: JurusanItem) => (
-                  <Card key={j.kode} className="border-border/80 shadow-sm hover:border-orange-500/40 transition flex flex-col justify-between">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <Badge className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5">
-                          {j.kode}
-                        </Badge>
-                        <span className="text-[11px] font-semibold text-muted-foreground">
-                          Akreditasi {j.akreditasi}
-                        </span>
-                      </div>
-                      <CardTitle className="text-base font-bold mt-3">
-                        {j.nama}
-                      </CardTitle>
-                      <CardDescription className="text-xs leading-relaxed line-clamp-3 mt-1">
-                        {j.deskripsi}
-                      </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="pt-0 text-xs space-y-2.5">
-                      {j.peluang_karir && j.peluang_karir.length > 0 && (
-                        <div className="border-t border-border/50 pt-2.5">
-                          <span className="text-[10px] font-bold uppercase text-muted-foreground">
-                            Prospek Karir Lulusan:
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {paginatedJurusans.map((j: JurusanItem) => (
+                    <Card key={j.kode} className="border-border/80 shadow-sm hover:border-orange-500/40 transition flex flex-col justify-between">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <Badge className="bg-orange-500 text-white text-xs font-bold px-2.5 py-0.5">
+                            {j.kode}
+                          </Badge>
+                          <span className="text-[11px] font-semibold text-muted-foreground">
+                            Akreditasi {j.akreditasi}
                           </span>
-                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                            {j.peluang_karir.slice(0, 3).join(', ')}
-                          </p>
                         </div>
-                      )}
-                      {j.kuota && (
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-border/30">
-                          <span>Daya Tampung:</span>
-                          <span className="font-semibold text-foreground">{j.kuota} Siswa</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <CardTitle className="text-base font-bold mt-3">
+                          {j.nama}
+                        </CardTitle>
+                        <CardDescription className="text-xs leading-relaxed line-clamp-3 mt-1">
+                          {j.deskripsi}
+                        </CardDescription>
+                      </CardHeader>
+
+                      <CardContent className="pt-0 text-xs space-y-2.5">
+                        {j.peluang_karir && j.peluang_karir.length > 0 && (
+                          <div className="border-t border-border/50 pt-2.5">
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                              Prospek Karir Lulusan:
+                            </span>
+                            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                              {j.peluang_karir.slice(0, 3).join(', ')}
+                            </p>
+                          </div>
+                        )}
+                        {j.kuota && (
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-border/30">
+                            <span>Daya Tampung:</span>
+                            <span className="font-semibold text-foreground">{j.kuota} Siswa</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <Pagination
+                  currentPage={jurusanPage}
+                  totalPages={totalJurusanPages}
+                  totalItems={filteredJurusans.length}
+                  pageSize={JURUSAN_PER_PAGE}
+                  onPageChange={setJurusanPage}
+                  className="mt-6"
+                />
+              </>
             )}
           </div>
         </section>
@@ -199,7 +308,7 @@ export default function PublicLandingPage() {
         {/* 4. Live FAQ Section */}
         <section id="faq" className="py-14 sm:py-20 bg-muted/20 scroll-mt-16">
           <div className="container mx-auto max-w-4xl px-4 sm:px-6">
-            <div className="text-center space-y-2 mb-10">
+            <div className="text-center space-y-2 mb-8">
               <Badge variant="outline" className="text-xs">
                 Frequently Asked Questions
               </Badge>
@@ -211,23 +320,112 @@ export default function PublicLandingPage() {
               </p>
             </div>
 
+            {/* FAQ Search & Category Filter */}
+            <div className="space-y-3 mb-6">
+              <div className="relative max-w-lg mx-auto">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari pertanyaan FAQ (e.g. syarat, biaya, tanggal, tes)..."
+                  value={searchFaq}
+                  onChange={(e) => {
+                    setSearchFaq(e.target.value);
+                    setFaqPage(1);
+                  }}
+                  className="pl-10 pr-9 text-xs h-10 shadow-xs"
+                />
+                {searchFaq && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchFaq('');
+                      setFaqPage(1);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {faqCategories.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                  <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
+                    <Filter className="h-3 w-3" /> Kategori:
+                  </span>
+                  <Badge
+                    variant={faqCategory === 'ALL' ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px]"
+                    onClick={() => {
+                      setFaqCategory('ALL');
+                      setFaqPage(1);
+                    }}
+                  >
+                    Semua ({faqs.length})
+                  </Badge>
+                  {faqCategories.map((cat) => (
+                    <Badge
+                      key={cat}
+                      variant={faqCategory === cat ? 'default' : 'outline'}
+                      className="cursor-pointer text-[11px]"
+                      onClick={() => {
+                        setFaqCategory(cat);
+                        setFaqPage(1);
+                      }}
+                    >
+                      {cat}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Card className="border-border/80 shadow-sm">
               <CardContent className="p-6">
                 {isLoading ? (
                   <Skeleton className="h-40 w-full" />
+                ) : filteredFaqs.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm font-semibold text-foreground">FAQ Tidak Ditemukan</p>
+                    <p className="text-xs mt-1">Tidak ada pertanyaan dengan kata kunci &ldquo;{searchFaq}&rdquo;</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchFaq('');
+                        setFaqCategory('ALL');
+                        setFaqPage(1);
+                      }}
+                      className="mt-3 text-xs"
+                    >
+                      Reset Pencarian
+                    </Button>
+                  </div>
                 ) : (
-                  <Accordion className="w-full">
-                    {faqs.map((faq: FaqItem, idx: number) => (
-                      <AccordionItem key={faq.id || idx} value={`faq-${idx}`}>
-                        <AccordionTrigger className="text-xs sm:text-sm font-semibold text-left">
-                          {faq.q}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                          {faq.a}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
+                  <>
+                    <Accordion className="w-full">
+                      {paginatedFaqs.map((faq: FaqItem, idx: number) => (
+                        <AccordionItem key={faq.id || idx} value={`faq-${idx}`}>
+                          <AccordionTrigger className="text-xs sm:text-sm font-semibold text-left">
+                            {faq.q}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                            {faq.a}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+
+                    <Pagination
+                      currentPage={faqPage}
+                      totalPages={totalFaqPages}
+                      totalItems={filteredFaqs.length}
+                      pageSize={FAQ_PER_PAGE}
+                      onPageChange={setFaqPage}
+                      className="mt-4"
+                    />
+                  </>
                 )}
               </CardContent>
             </Card>

@@ -40,14 +40,31 @@ test.describe('Dashboard Admin & Operasional', () => {
 
     await expect(page.getByRole('heading', { name: /Tambah Entitas Pengetahuan Baru/i })).toBeVisible();
     await expect(page.getByPlaceholder('Contoh: BEASISWA, TATA_TERTIB, SERAGAM')).toBeVisible();
+
+    // Close dialog
+    await page.getByRole('button', { name: /Batal/i }).click();
+
+    // Verify Search Bar and Pagination exist
+    const searchInput = page.getByPlaceholder(/Cari program jurusan, materi keahlian/i);
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill('Otomotif');
+    await expect(page.getByText('TKR')).toBeVisible();
+
+    // Clear search
+    await searchInput.fill('');
+    await expect(page.getByText(/Menampilkan/i).first()).toBeVisible();
   });
 
-  test('harus memuat halaman manajemen tiket eskalasi dengan filter tabs', async ({ page }) => {
+  test('harus memuat halaman manajemen tiket eskalasi dengan filter tabs, search, dan pagination', async ({ page }) => {
     await page.goto('/dashboard/tickets');
 
     await expect(page.getByRole('heading', { name: /Daftar Tiket Eskalasi Panitia/i })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Semua Tiket' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Semua Tiket/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Menunggu Respons/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Terselesaikan/i })).toBeVisible();
+
+    // Verify Search input
+    const searchTicketInput = page.getByPlaceholder(/Cari ID tiket, nomor WhatsApp siswa/i);
+    await expect(searchTicketInput).toBeVisible();
   });
 });

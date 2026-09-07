@@ -44,4 +44,28 @@ test.describe('Portal Publik & SPMB', () => {
     const sppQuestion = page.locator('text=Apakah sekolah di SMK Negeri 1 Adiwerna ada SPP bulanan?').first();
     await expect(sppQuestion).toBeVisible();
   });
+
+  test('harus mendukung pencarian jurusan dan FAQ secara interaktif dengan paginasi', async ({ page }) => {
+    await page.goto('/');
+
+    // 1. Search Jurusan
+    const jurusanSearchInput = page.getByPlaceholder(/Cari jurusan/i);
+    await expect(jurusanSearchInput).toBeVisible();
+    await jurusanSearchInput.fill('Mesin');
+
+    // Should filter to TPM (Teknik Pemesinan)
+    await expect(page.locator('text=TPM').first()).toBeVisible();
+    await expect(page.locator('text=RPL')).toHaveCount(0);
+
+    // Clear search
+    await jurusanSearchInput.fill('');
+    await expect(page.locator('text=RPL').first()).toBeVisible();
+
+    // 2. Search FAQ
+    const faqSearchInput = page.getByPlaceholder(/Cari pertanyaan FAQ/i);
+    await expect(faqSearchInput).toBeVisible();
+    await faqSearchInput.fill('SPP');
+
+    await expect(page.locator('text=Apakah sekolah di SMK Negeri 1 Adiwerna ada SPP bulanan?').first()).toBeVisible();
+  });
 });
