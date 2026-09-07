@@ -4,13 +4,16 @@
   "private": true,
   "description": "ADAPTIVA-BOT: Cognitive Automation AI & Agile Architecture - SMK Negeri 1 Adiwerna",
   "workspaces": [
-    "backend"
+    "backend",
+    "fe"
   ],
   "scripts": {
     "dev": "npm --prefix backend run dev",
     "dev:backend": "npm --prefix backend run dev",
+    "dev:fe": "cd fe && bun run dev",
     "build": "npm --prefix backend run build",
     "build:backend": "npm --prefix backend run build",
+    "build:fe": "cd fe && bun run build",
     "start": "npm --prefix backend run start",
     "test": "npm --prefix backend run test",
     "test:watch": "npm --prefix backend run test:watch",
