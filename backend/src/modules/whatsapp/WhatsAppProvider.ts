@@ -8,6 +8,7 @@ import { ticketService } from '../tickets/TicketService';
 import { WhatsAppFormatter } from '../../core/WhatsAppFormatter';
 import { env, APP_CONFIG } from '../../config/env';
 import { logger } from '../../core/logger';
+import { BadRequestError } from '../../core/AppError';
 
 export type WAConnectionStatus =
   'DISCONNECTED' | 'INITIALIZING' | 'SCAN_QR' | 'CONNECTED' | 'ERROR';
@@ -324,14 +325,48 @@ export class WhatsAppProvider extends EventEmitter {
     };
   }
 
+  public sanitizeNumber(numberStr: string): string {
+    let cleaned = numberStr.replace(/[^0-9]/g, '');
+    if (cleaned.startsWith('0')) {
+      cleaned = '62' + cleaned.slice(1);
+    } else if (cleaned.startsWith('8')) {
+      cleaned = '62' + cleaned;
+    }
+    return cleaned;
+  }
+
   public async sendManualMessage(targetNumber: string, text: string): Promise<Message> {
     if (!this.isReady || !this.client) {
-      throw new Error('WhatsApp client is not connected');
+      throw new BadRequestError('WhatsApp Gateway belum terhubung. Silakan scan QR code terlebih dahulu.');
     }
-    const formatted = targetNumber.includes('@c.us')
-      ? targetNumber
-      : `${targetNumber.replace(/[^0-9]/g, '')}@c.us`;
-    return await this.client.sendMessage(formatted, text);
+
+    const cleaned = this.sanitizeNumber(targetNumber);
+    if (cleaned.length < 9) {
+      throw new BadRequestError('Format nomor WhatsApp tidak valid. Gunakan format contoh: 08123456789 atau 628123456789');
+    }
+
+    try {
+      let targetJid = `${cleaned}@c.us`;
+      try {
+        const numberId = await this.client.getNumberId(cleaned);
+        if (numberId?._serialized) {
+          targetJid = numberId._serialized;
+        } else {
+          logger.warn(`[WhatsAppProvider] Number ${cleaned} might not be registered on WhatsApp.`);
+        }
+      } catch (errCheck) {
+        logger.warn(`[WhatsAppProvider] getNumberId check warning: ${errCheck}`);
+      }
+
+      return await this.client.sendMessage(targetJid, text);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error(`[WhatsAppProvider] Send manual message error to ${targetNumber}: ${msg}`);
+      if (msg === 't' || msg.includes('Evaluation failed') || msg.includes('getChat')) {
+        throw new BadRequestError(`Nomor tujuan (${targetNumber}) tidak valid atau belum terdaftar di WhatsApp.`);
+      }
+      throw new BadRequestError(`Gagal mengirim pesan WhatsApp: ${msg}`);
+    }
   }
 }
 

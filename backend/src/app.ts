@@ -56,9 +56,15 @@ export function createApp(): express.Application {
     }
 
     logger.error(`[UnhandledError] ${err.message}`, err.stack);
+
+    let displayMessage = err.message || 'Internal server error';
+    if (displayMessage === 't' || displayMessage.includes('Evaluation failed')) {
+      displayMessage = 'Terjadi kendala pada komunikasi WhatsApp Web (nomor tidak valid atau kontak tidak ditemukan).';
+    }
+
     return ApiResponse.error(
       res,
-      process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+      displayMessage,
       500
     );
   });
