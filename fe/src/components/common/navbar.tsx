@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Database, Ticket, ExternalLink } from 'lucide-react';
+import { MessageSquare, ExternalLink } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -39,7 +39,7 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation Links */}
+        {/* Navigation Links (Clean Public & Portal Navigation) */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
           <Link
             href="/"
@@ -49,56 +49,50 @@ export function Navbar() {
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            Portal Publik
+            Beranda
           </Link>
           <Link
-            href="/dashboard/whatsapp"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center gap-1.5 ${
-              pathname === '/dashboard/whatsapp'
-                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
+            href="/#jurusan"
+            className="px-3 py-2 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
           >
-            <MessageSquare className="h-4 w-4" />
-            WhatsApp Gateway
+            Konsentrasi Keahlian
           </Link>
           <Link
-            href="/dashboard/knowledge"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center gap-1.5 ${
-              pathname === '/dashboard/knowledge'
-                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
+            href="/#faq"
+            className="px-3 py-2 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
           >
-            <Database className="h-4 w-4" />
-            Knowledge Base
-          </Link>
-          <Link
-            href="/dashboard/tickets"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center gap-1.5 ${
-              pathname === '/dashboard/tickets'
-                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <Ticket className="h-4 w-4" />
-            Tiket Eskalasi
+            SPMB FAQ
           </Link>
         </nav>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          <Link href="/dashboard" className="hidden sm:inline-flex">
+            <Button
+              variant={pathname?.startsWith('/dashboard') ? 'default' : 'outline'}
+              size="sm"
+              className={`text-xs gap-1.5 ${
+                pathname?.startsWith('/dashboard')
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                  : ''
+              }`}
+            >
+              Pusat Kendali Bot
+            </Button>
+          </Link>
+
           <a
             href="http://localhost:3000/reference"
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:inline-flex"
+            className="hidden lg:inline-flex"
           >
             <Button variant="outline" size="sm" className="gap-1.5 text-xs">
               Scalar Docs
               <ExternalLink className="h-3 w-3 text-muted-foreground" />
             </Button>
           </a>
+
           <a
             href="https://wa.me/6285292677431"
             target="_blank"

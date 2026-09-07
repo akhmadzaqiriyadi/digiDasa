@@ -130,7 +130,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* 3. 9 Jurusan Kejuruan Section */}
-        <section className="py-14 sm:py-20 border-b border-border/40">
+        <section id="jurusan" className="py-14 sm:py-20 border-b border-border/40 scroll-mt-16">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
               <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-xs">
@@ -197,7 +197,7 @@ export default function PublicLandingPage() {
         </section>
 
         {/* 4. Live FAQ Section */}
-        <section className="py-14 sm:py-20 bg-muted/20">
+        <section id="faq" className="py-14 sm:py-20 bg-muted/20 scroll-mt-16">
           <div className="container mx-auto max-w-4xl px-4 sm:px-6">
             <div className="text-center space-y-2 mb-10">
               <Badge variant="outline" className="text-xs">

@@ -9,12 +9,17 @@ test.describe('Portal Publik & SPMB', () => {
     await expect(navbar).toBeVisible();
     await expect(page.getByRole('link', { name: 'Dashboard Bot' })).toHaveCount(0);
 
-    // Verify correct navbar links
     const nav = page.locator('nav');
-    await expect(nav.getByRole('link', { name: 'Portal Publik' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'WhatsApp Gateway' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Knowledge Base' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Tiket Eskalasi' })).toBeVisible();
+    // Verify that the redundant dashboard tabs are removed from the public navbar
+    await expect(nav.getByRole('link', { name: 'WhatsApp Gateway' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Knowledge Base' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Tiket Eskalasi' })).toHaveCount(0);
+
+    // Verify correct public navbar links
+    await expect(nav.getByRole('link', { name: 'Beranda' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Konsentrasi Keahlian' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'SPMB FAQ' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Pusat Kendali Bot' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Chat WhatsApp Bot', exact: true })).toBeVisible();
 
     // 2. Hero Section checks
