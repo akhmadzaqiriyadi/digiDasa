@@ -16,9 +16,18 @@ test.describe('Dashboard Admin & Operasional', () => {
     // Verify WhatsApp management controls
     await expect(page.getByText(/Status & Sesi WhatsApp Gateway/i)).toBeVisible();
 
-    // Verify "Keluar Sesi WA (Logout)" and "Putuskan Sambungan" exist
-    await expect(page.getByRole('button', { name: /Keluar Sesi WA \(Logout\)/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Putuskan Sambungan/i })).toBeVisible();
+    // Verify Refresh button is always available
+    await expect(page.getByRole('button', { name: /Refresh/i })).toBeVisible();
+
+    // Verify session control buttons exist according to connection state
+    const isConnected = await page.getByText(/TERHUBUNG \(Online\)/i).isVisible();
+    if (isConnected) {
+      await expect(page.getByRole('button', { name: /Putuskan Sambungan/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Keluar Sesi WA \(Logout\)/i })).toBeVisible();
+    } else {
+      const actionControl = page.getByRole('button', { name: /(Mulai Sesi|Batalkan|Hubungkan Ulang|Reset Sesi)/i }).first();
+      await expect(actionControl).toBeVisible();
+    }
 
     // Verify form uji pesan WhatsApp
     await expect(page.getByText(/Uji Coba Pengiriman Pesan/i)).toBeVisible();
@@ -26,7 +35,7 @@ test.describe('Dashboard Admin & Operasional', () => {
 
     // Verify QR Code image is rendered when in SCAN_QR state
     const qrImg = page.locator('img[alt="WhatsApp QR Code"]');
-    const waitingScan = page.getByText(/MENUNGGU SCAN QR/i);
+    const waitingScan = page.getByText(/MENUNGGU SCAN QR/i).first();
     if (await waitingScan.isVisible()) {
       await expect(qrImg).toBeVisible();
     }

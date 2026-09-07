@@ -76,6 +76,10 @@ export default function WhatsAppDashboardPage() {
   const qrDataUrl = waResponse?.data.qrDataUrl;
   const pairingCode = waResponse?.data.pairingCode;
   const hasQr = Boolean(qrDataUrl || qrString);
+  const isScanQr = (status === 'SCAN_QR' || hasQr) && !isConnected;
+  const isInitializing = status === 'INITIALIZING' && !isConnected;
+  const isError = status === 'ERROR' && !isConnected;
+  const isDisconnected = !isConnected && !isScanQr && !isInitializing && !isError;
 
   const onSubmit = (data: SendTestMessageInput) => {
     sendTestMutation.mutate(data, {
@@ -102,15 +106,52 @@ export default function WhatsAppDashboardPage() {
           <Card className="border-border/80 shadow-sm">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <QrCode className="h-4 w-4 text-orange-500" />
-                  Status &amp; Sesi WhatsApp Gateway
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Scan QR code menggunakan aplikasi WhatsApp di HP panitia
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <QrCode className="h-4 w-4 text-orange-500" />
+                    Status &amp; Sesi WhatsApp Gateway
+                  </CardTitle>
+                  {isConnected ? (
+                    <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                      TERHUBUNG (Online)
+                    </Badge>
+                  ) : isScanQr ? (
+                    <Badge variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-400 text-[11px] gap-1 animate-pulse">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      MENUNGGU SCAN QR
+                    </Badge>
+                  ) : isInitializing ? (
+                    <Badge variant="outline" className="border-blue-500 text-blue-600 text-[11px] gap-1">
+                      <RefreshCw className="h-3 w-3 animate-spin" />
+                      MENYIAPKAN BROWSER...
+                    </Badge>
+                  ) : isError ? (
+                    <Badge variant="destructive" className="text-[11px] gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      KENDALA SESI (ERROR)
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-[11px] gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                      OFFLINE / TERPUTUS
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="text-xs mt-1">
+                  {isConnected
+                    ? 'Sesi WhatsApp aktif melayani pertanyaan calon siswa secara otomatis 24 jam nonstop.'
+                    : isScanQr
+                    ? 'Scan QR code di bawah menggunakan aplikasi WhatsApp di HP panitia SPMB.'
+                    : isInitializing
+                    ? 'Browser headless Puppeteer sedang dinyalakan untuk membuat sesi login baru.'
+                    : isError
+                    ? 'Terjadi kendala pada koneksi browser WhatsApp. Silakan hubungkan ulang atau reset sesi.'
+                    : 'Klien WhatsApp belum aktif. Klik Mulai Sesi untuk menghasilkan QR Code login.'}
                 </CardDescription>
               </div>
 
+              {/* Action Buttons Decision Tree */}
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
@@ -123,55 +164,177 @@ export default function WhatsAppDashboardPage() {
                   Refresh
                 </Button>
 
-                {/* Disconnect Alert Dialog */}
-                <AlertDialog>
-                  <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 border border-border bg-background hover:bg-muted text-amber-600 hover:text-amber-700 gap-1 cursor-pointer">
-                    <PowerOff className="h-3 w-3" />
-                    Putuskan Sambungan
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Putuskan Sambungan WhatsApp?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Klien browser WhatsApp akan ditutup sementara. Sesi login tetap tersimpan di database dan dapat dihubungkan kembali kapan saja.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Batal</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => disconnectMutation.mutate()}
-                        className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
-                      >
-                        Ya, Putuskan
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                {/* 1. STATE: TERHUBUNG (CONNECTED) -> Tampilkan Putuskan & Logout */}
+                {isConnected && (
+                  <>
+                    <AlertDialog>
+                      <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 gap-1 cursor-pointer">
+                        <PowerOff className="h-3 w-3" />
+                        Putuskan Sambungan
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Putuskan Sambungan WhatsApp?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Klien browser WhatsApp akan ditutup sementara. Sesi login tetap tersimpan di database dan dapat dihubungkan kembali tanpa scan QR ulang.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => disconnectMutation.mutate()}
+                            className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
+                          >
+                            Ya, Putuskan
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
 
-                {/* Logout Alert Dialog */}
-                <AlertDialog>
-                  <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 bg-destructive hover:bg-destructive/90 text-white gap-1 cursor-pointer">
-                    <LogOut className="h-3 w-3" />
-                    Keluar Sesi WA (Logout)
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Konfirmasi Keluar Sesi (Logout)</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Apakah Anda yakin ingin keluar dari sesi WhatsApp ini? File session LocalAuth akan dibersihkan dan Anda perlu melakukan scan QR ulang.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Batal</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => logoutMutation.mutate()}
-                        className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
-                      >
-                        Ya, Keluar Sesi
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 bg-destructive hover:bg-destructive/90 text-white gap-1 cursor-pointer">
+                        <LogOut className="h-3 w-3" />
+                        Keluar Sesi WA (Logout)
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Konfirmasi Keluar Sesi (Logout)</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Apakah Anda yakin ingin keluar dari sesi WhatsApp ini? File session LocalAuth akan dibersihkan dan Anda perlu melakukan scan QR ulang.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => logoutMutation.mutate()}
+                            className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                          >
+                            Ya, Keluar Sesi
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+
+                {/* 2. STATE: MENUNGGU SCAN QR -> Tampilkan Batalkan Scan (bukan Putuskan Sambungan) */}
+                {isScanQr && (
+                  <AlertDialog>
+                    <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 border border-destructive/30 text-destructive hover:bg-destructive/10 gap-1 cursor-pointer">
+                      <PowerOff className="h-3 w-3" />
+                      Batalkan Scan QR
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Batalkan Scan QR Code?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Proses pembuatan sesi akan dihentikan dan tampilan QR code akan ditutup.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => disconnectMutation.mutate()}
+                          className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                        >
+                          Ya, Batalkan
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+
+                {/* 3. STATE: INITIALIZING -> Tombol Batal */}
+                {isInitializing && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => disconnectMutation.mutate()}
+                    disabled={disconnectMutation.isPending}
+                    className="text-xs text-muted-foreground hover:text-destructive gap-1 cursor-pointer"
+                  >
+                    <PowerOff className="h-3 w-3" />
+                    Batalkan
+                  </Button>
+                )}
+
+                {/* 4. STATE: OFFLINE / DISCONNECTED -> Tombol Mulai Sesi & Reset Cache */}
+                {isDisconnected && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => connectMutation.mutate()}
+                      disabled={connectMutation.isPending}
+                      className="bg-orange-500 hover:bg-orange-600 text-white text-xs gap-1.5 cursor-pointer"
+                    >
+                      <Zap className="h-3.5 w-3.5" />
+                      {connectMutation.isPending ? 'Menyiapkan...' : 'Mulai Sesi WhatsApp'}
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 cursor-pointer">
+                        <LogOut className="h-3 w-3" />
+                        Reset Sesi WA
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Cache Sesi WhatsApp?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tindakan ini akan membersihkan sisa session LocalAuth untuk memastikan inisialisasi sesi baru benar-benar bersih.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => logoutMutation.mutate()}
+                            className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                          >
+                            Ya, Bersihkan
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+
+                {/* 5. STATE: ERROR -> Tombol Hubungkan Ulang & Reset */}
+                {isError && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => connectMutation.mutate()}
+                      disabled={connectMutation.isPending}
+                      className="bg-orange-500 hover:bg-orange-600 text-white text-xs gap-1.5 cursor-pointer"
+                    >
+                      <Zap className="h-3.5 w-3.5" />
+                      {connectMutation.isPending ? 'Mencoba...' : 'Hubungkan Ulang'}
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 bg-destructive hover:bg-destructive/90 text-white gap-1 cursor-pointer">
+                        <LogOut className="h-3 w-3" />
+                        Reset Sesi (Logout)
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Sesi LocalAuth?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Membersihkan file session LocalAuth yang rusak agar QR code dapat digenerate kembali.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => logoutMutation.mutate()}
+                            className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                          >
+                            Ya, Reset Sesi
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
               </div>
             </CardHeader>
 
