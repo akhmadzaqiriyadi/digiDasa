@@ -31,7 +31,7 @@ export default function DashboardLayout({
     refetchInterval: 10000,
   });
 
-  const isOnline = status?.system.status === 'ONLINE';
+  const isOnline = Boolean(status?.system?.status === 'ONLINE' || status?.server === 'ONLINE');
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
@@ -47,8 +47,9 @@ export default function DashboardLayout({
               </h1>
               <Badge
                 variant={isOnline ? 'default' : 'secondary'}
-                className={isOnline ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                className={isOnline ? 'bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5' : 'gap-1.5'}
               >
+                <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-200 animate-pulse' : 'bg-amber-400'}`} />
                 {isOnline ? 'SYSTEM ONLINE' : 'CHECKING...'}
               </Badge>
             </div>
