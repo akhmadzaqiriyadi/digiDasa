@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌐 ADAPTIVA-BOT Frontend (Next.js 15 + Tailwind CSS + Shadcn UI)
 
-## Getting Started
+Antarmuka web resmi untuk Pusat Kendali Operasional Panitia SPMB dan Portal Informasi Publik SMK Negeri 1 Adiwerna (STM ADB).
 
-First, run the development server:
+---
+
+## 🚀 Fitur Utama Frontend
+
+1. **Dashboard Eksekutif & Metrik (`/dashboard`)**:
+   - Status kesehatan sistem realtime (*Uptime, Provider AI, Mode Operasional*).
+   - Ringkasan analitik chat, tiket eskalasi terbuka, dan distribusi topik populer.
+2. **Pusat Gateway WhatsApp (`/dashboard/whatsapp`)**:
+   - Status koneksi WhatsApp interaktif (*Connected, Initializing, Scan QR, Disconnected*).
+   - State machine buttons yang cerdas tanpa duplikasi animasi loading.
+   - Pengujian kirim pesan WhatsApp langsung ke nomor orang tua murid/pendaftar.
+3. **Manajemen Tiket Eskalasi Panitia (`/dashboard/tickets`)**:
+   - Antrean kasus siswa/wali murid yang membutuhkan asistensi staf manual.
+   - Fitur pencarian instan (ID Tiket, Nomor WhatsApp, Alasan).
+   - Filter status (`Semua`, `Menunggu Respons`, `Terselesaikan`) & Paginasi.
+   - Tombol langsung *"Hubungi via WhatsApp"* dan *"Selesaikan Tiket"*.
+4. **Basis Pengetahuan & Kurikulum (`/dashboard/knowledge`)**:
+   - CRUD Visual untuk Program Keahlian / Jurusan dengan form dialog interaktif.
+   - CRUD Tanya Jawab Resmi Panitia (FAQ).
+   - CRUD Entitas Pengetahuan Dinamis kustom (*Kelas Industri, Beasiswa, TEFA*).
+5. **Portal Publik SPMB (`/`)**:
+   - Banner Hero resmi SMKN 1 Adiwerna dengan pemisah visual gedung yang presisi.
+   - Pencarian jurusan dan FAQ interaktif untuk calon pendaftar.
+   - Tombol akses cepat WhatsApp dan widget informasi pendaftaran.
+
+---
+
+## 🛠️ Stack Teknologi
+
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **UI & Styling**: [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/)
+- **State & Server Cache**: [@tanstack/react-query v5](https://tanstack.com/query)
+- **Validasi Data**: [Zod v3](https://zod.dev/)
+- **Ikon**: [Lucide React](https://lucide.dev/)
+- **Testing**: [Playwright E2E Suite](https://playwright.dev/)
+
+---
+
+## ⚡ Panduan Menjalankan
 
 ```bash
+# 1. Instalasi dependensi
+npm install
+
+# 2. Menjalankan server pengembangan (Port 3001)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 3. Pengecekan Type-safety TypeScript
+npm run typecheck
+
+# 4. Menjalankan E2E Testing (Playwright)
+npm run test:e2e
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

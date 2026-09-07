@@ -88,26 +88,60 @@ ADAPTIVA-BOT dirancang dengan arsitektur **Monorepo Modern**, memisahkan secara 
 
 ---
 
-### 3. Lapisan Cognitive AI & Anti-Halusinasi (*Cognitive AI Layer*)
-Sistem menerapkan pola **Strategy Pattern** melalui antarmuka `IAIProvider`:
-1. **Primary Provider (`GeminiProvider`)**:
-   * Menggunakan model mutakhir **Google Gemini 2.5 Flash** via Google GenAI SDK.
-   * Menginjeksikan basis data resmi (SK Panitia SPMB 2026/2027) ke dalam *System Prompt Grounding*.
-   * Diberikan instruksi ketat: **hanya menjawab berdasarkan data resmi yang disediakan**. Jika informasi tidak ada di SK, AI wajib menyatakan tidak memiliki wewenang dan mengarahkan ke panitia.
-2. **Local Fallback Engine (`LocalFallbackProvider`)**:
-   * Jaring pengaman deterministik berbasis pencocokan bobot semantik (*keyword-weighted scoring*).
-   * Menjamin bot **tetap menjawab dalam waktu < 1 ms** untuk pertanyaan fundamental (biaya SPP gratis, syarat berkas, pilihan jurusan, jadwal pendaftaran) meskipun kuota API habis atau server offline.
+### 3. Lapisan Cognitive AI & Decision Engine (*Hybrid 4-Tier Architecture*)
+Sistem menerapkan **Arsitektur Pengambilan Keputusan Hibrida (4 Tingkat)** untuk menjamin kecepatan respons instan (< 1 ms), keakuratan 100% tanpa halusinasi, dan ketersediaan layanan 24/7:
+
+```
+                          [Pesan WhatsApp / Web Masuk]
+                                       │
+               ┌───────────────────────┴───────────────────────┐
+               ▼                                               ▼
+   [Angka 1-5 / Menu Cepat]                        [Pertanyaan Kalimat Bebas]
+               │                                               │
+        (Eksekusi 0 ms)                                        ▼
+      Fast Numeric Router                         [Google Gemini 2.5 Flash]
+  (Data Resmi SK SPMB 2026)                                    │
+                                               ┌───────────────┴───────────────┐
+                                               ▼                               ▼
+                                        [Data Tersedia]             [Di Luar Cakupan Data /
+                                      Jawaban Santun &               Butuh Konfirmasi Staf /
+                                      Akurat Sesuai SK                   Kata Kunci 'Admin']
+                                                                               │
+                                                                               ▼
+                                                                  [HUMAN ESCALATION TRIGGER]
+                                                                               │
+                                                              ┌────────────────┴────────────────┐
+                                                              ▼                                 ▼
+                                                     Buat Tiket Persisten              Kirimkan Nomor Tiket
+                                                   (tickets.json / Database)           ke WhatsApp Pengguna
+```
+
+1. **Tier 1 - Fast Numeric Router (0 ms Latency)**:
+   - Menangkap pintasan angka cepat (**1 s.d. 5**) atau kata kunci pasti tanpa membuang kuota/latency API:
+     * **`1`**: Pilihan Jurusan & Kuota Daya Tampung SPMB.
+     * **`2`**: Syarat Berkas & Dokumen Pendaftaran Resmi.
+     * **`3`**: Rincian Biaya Bebas SPP (Gratis) & Paket Seragam.
+     * **`4`**: Jadwal & Alur Tahapan Pendaftaran SPMB 2026.
+     * **`5`**: Bantuan Staf Panitia SPMB & Pembuatan Tiket Layanan.
+2. **Tier 2 - Cognitive Generative AI (Google Gemini 2.5 Flash Grounded)**:
+   - Memproses pertanyaan bahasa alami kontekstual dari orang tua murid (contoh: *"kalau anak saya dari luar kota apa syaratnya?"* atau *"seragamnya bisa dicicil gak?"*).
+   - Dibatasi secara mutlak oleh SK Panitia SPMB 2026/2027 sebagai pedoman anti-halusinasi (*Zero Hallucination Guarantee*).
+3. **Tier 3 - Deterministic Semantic Fallback Engine**:
+   - Menjamin bot **tetap beroperasi normal dalam waktu < 1 ms** saat kuota API Gemini habis, terjadi gangguan jaringan internet, atau saat offline.
+4. **Tier 4 - Human Escalation & Persistent Ticketing**:
+   - Mendeteksi kasus khusus/dispensasi atau permintaan eksplisit menghubungi staf (`admin`, `panitia`, `manusia`, atau menu `5`).
+   - Otomatis menerbitkan nomor tiket unik (contoh: `#TCK-956915`), mengirimkan nomor tiket tersebut ke chat WhatsApp pendaftar, dan menyimpannya secara persisten ke disk (`backend/tickets.json`) dan database PostgreSQL.
 
 ---
 
 ### 4. Lapisan Penyimpanan Data (*Data Persistence Layer*)
-* **PostgreSQL Engine**: Database relasional tangguh untuk menjamin integritas data, konkurensi tinggi, dan ACID compliance.
+* **PostgreSQL Engine & Persistent JSON**: Database relasional tangguh dengan ACID compliance, didukung penyimpanan fail-safe lokal (`tickets.json`) agar antrean tiket tetap aman saat server restart.
 * **Prisma ORM v6.4**: Lapisan abstraksi database dengan skema deklaratif:
-  * Model `SchoolInfo` & `PmbRegistration`: Data profil sekolah dan jadwal pendaftaran.
+  * Model `SchoolInfo` & `AdmissionSchedule`: Profil sekolah dan jadwal resmi pendaftaran.
   * Model `Jurusan`: Program keahlian, kuota daya tampung, akreditasi, dan prospek karir.
-  * Model `Faq`: Bank tanya jawab resmi panitia.
-  * Model `KnowledgeEntity`: Entitas informasi tambahan dinamis.
-  * Model `ChatSession` & `ChatMessage`: Jejak audit percakapan orang tua murid.
+  * Model `FaqItem`: Bank tanya jawab resmi panitia.
+  * Model `KnowledgeEntity`: Entitas informasi tambahan dinamis (Kelas Industri, Beasiswa, TEFA).
+  * Model `ChatLog`: Jejak audit percakapan orang tua murid.
   * Model `EscalationTicket`: Antrean eskalasi kasus panitia.
 
 ---
@@ -130,7 +164,7 @@ sequenceDiagram
         Admin->>FE: Buka Menu Scanner & Scan QR
         FE->>API: GET /api/v1/whatsapp/status (Poll / Check QR)
         API-->>FE: Tampilkan QR Code di Layar Dashboard
-        Admin->>FE: Tambah Entitas Baru (misal: Beasiswa Khusus)
+        Admin->>FE: Tambah Entitas Baru via Dialog Form (CRUD)
         FE->>API: POST /api/v1/knowledge/entities
         API->>DB: Simpan ke PostgreSQL & Sinkron ke Memori AI
         DB-->>API: 201 Created
@@ -139,12 +173,15 @@ sequenceDiagram
 
     rect rgb(30, 45, 30)
         Note over Wali,AI: Skenario 2: Tanya Jawab Otomatis Calon Wali Murid
-        Wali->>WA: Kirim Chat ("Apakah ada program beasiswa?")
+        Wali->>WA: Kirim Chat ("1" atau "Apakah ada beasiswa?")
         WA->>API: Event onMessage (Text, SenderID)
-        API->>DB: Ambil Grounding Data Terbaru (termasuk Entitas Kustom)
-        DB-->>API: Data SK SPMB + Beasiswa Baru
-        API->>AI: Sintesis Jawaban dengan Grounding Ketat
-        AI-->>API: Respon Resmi Anti-Halusinasi
+        alt Navigasi Angka 1-5
+            API->>API: Fast Numeric Router (0 ms)
+        else Pertanyaan Bahasa Alami
+            API->>DB: Ambil Grounding Data SK Resmi
+            API->>AI: Sintesis Jawaban dengan Grounding Ketat
+            AI-->>API: Respon Resmi Anti-Halusinasi
+        end
         API->>API: WhatsAppFormatter (Format Teks Indah)
         API-->>WA: Kirim Pesan Terformat
         WA-->>Wali: Jawaban Diterima di WhatsApp (< 2 Detik)
@@ -152,12 +189,12 @@ sequenceDiagram
 
     rect rgb(45, 30, 30)
         Note over Wali,Admin: Skenario 3: Kasus Khusus & Eskalasi Human-in-the-Loop
-        Wali->>WA: Kirim Chat ("Saya butuh keringanan biaya seragam")
+        Wali->>WA: Kirim Chat ("admin" / "saya butuh keringanan")
         WA->>API: Deteksi Intent Bantuan Khusus
-        API->>DB: Buat Tiket Antrean (TCK-XXXXXX)
-        API-->>WA: Balasan + Link wa.me Panitia
-        Admin->>FE: Buka Menu Tiket Eskalasi (GET /api/v1/tickets)
-        FE-->>Admin: Notifikasi Tiket Baru Muncul di Dashboard
+        API->>DB: Buat Tiket Antrean (#TCK-XXXXXX) & Simpan Persisten
+        API-->>WA: Balasan + Link wa.me Panitia + Bukti Nomor Tiket #TCK-XXXXXX
+        Admin->>FE: Buka Menu Tiket Eskalasi (/dashboard/tickets)
+        FE-->>Admin: Tiket Baru Muncul Real-time dengan Status OPEN
         Admin->>FE: Klik "Resolve Tiket" setelah Menghubungi Wali Murid
         FE->>API: POST /api/v1/tickets/:id/resolve
         API->>DB: Update Status Tiket RESOLVED
@@ -181,23 +218,35 @@ sequenceDiagram
 │   │   ├── core/                     # Utilitas atomik (ApiResponse, AppError, Logger, Prisma, Formatter)
 │   │   ├── docs/                     # Spesifikasi OpenAPI 3.0 & Scalar UI (/reference)
 │   │   ├── modules/                  # Domain modules (Clean Architecture)
-│   │   │   ├── ai/                   # AI Strategy (Gemini 2.5 Flash + Local Fallback Engine)
+│   │   │   ├── ai/                   # AI Strategy (Fast Numeric + Gemini 2.5 Flash + Local Fallback)
 │   │   │   ├── chat/                 # Chat Pipeline, Conversational Memory & DTO
 │   │   │   ├── knowledge/            # Dynamic Knowledge Base & Live Grounding Repository
-│   │   │   ├── tickets/              # Escalation Queue & Analytics
+│   │   │   ├── tickets/              # Escalation Queue, File Persistence & Analytics
 │   │   │   └── whatsapp/             # WhatsApp Client Manager & Event Controller
 │   │   ├── routes/                   # Central API Router v1
 │   │   ├── app.ts                    # Konfigurasi aplikasi Express
 │   │   └── server.ts                 # Entry point server & Graceful Shutdown
 │   ├── tests/
 │   │   └── e2e/                      # Vitest & Supertest E2E Test Suite (24 Test Cases)
+│   ├── tickets.json                  # Penyimpanan persisten antrean tiket eskalasi
 │   ├── .env.example                  # Template variabel lingkungan
-│   ├── eslint.config.mjs             # Flat ESLint configuration
 │   ├── vitest.config.ts              # Konfigurasi Vitest runner
 │   ├── tsconfig.json                 # Konfigurasi TypeScript Strict Mode
 │   └── package.json                  # Dependensi backend & npm scripts
-├── fe/                               # Antarmuka Pengguna Frontend (Siap untuk inisialisasi framework UI)
-│   └── .gitkeep
+├── fe/                               # Antarmuka Pengguna Frontend (Next.js 15, React 19, Tailwind CSS)
+│   ├── src/
+│   │   ├── app/                      # Next.js App Router (Dashboard & Portal Publik)
+│   │   │   ├── dashboard/            # Pusat Kendali Panitia (WhatsApp, Tiket, Knowledge, Overview)
+│   │   │   ├── globals.css           # Design tokens & Glassmorphism system
+│   │   │   ├── layout.tsx            # Root layout & Metadata
+│   │   │   └── page.tsx              # Portal Publik SPMB & Pencarian Kurikulum
+│   │   ├── components/               # Komponen UI Reusable (Shadcn UI, Modals, Dialogs, Pagination)
+│   │   ├── hooks/                    # Custom React Query Hooks (useWhatsApp, useKnowledge, useTickets)
+│   │   └── lib/                      # API Client & Skema Validasi Zod
+│   ├── e2e/                          # Playwright E2E Test Suite (6 Passing Tests)
+│   ├── playwright.config.ts          # Konfigurasi Playwright Test Runner
+│   ├── tsconfig.json                 # Konfigurasi TypeScript Frontend
+│   └── package.json                  # Dependensi frontend (Next.js, Radix UI, TanStack Query)
 ├── docs/                             # Berkas lembar kerja, PDF resmi, & panduan deployment
 │   ├── PANDUAN_PENGGUNAAN_DAN_DEPLOYMENT.md
 │   ├── LEMBAR_KERJA_DIGIFORWARD_ADAPTIVA.pdf
@@ -218,9 +267,10 @@ Spesifikasi OpenAPI 3.0 dan UI Interaktif: **`http://localhost:3000/reference`**
 | :--- | :--- | :--- | :--- |
 | `GET` | `/health` | Pemeriksaan kesehatan server & uptime | - |
 | `GET` | `/reference` / `/docs` | **Scalar Interactive API Reference UI** | Dark theme *DeepSpace* |
-| `POST` | `/api/v1/chat` | Chat percakapan AI (Grounded SK SPMB) | Body: `{ message, sessionId? }` |
+| `POST` | `/api/v1/chat` | Chat percakapan AI (Grounded SK SPMB + Fast Numeric) | Body: `{ message, sender, history? }` |
 | `GET` | `/api/v1/knowledge` | Mengambil basis data profil sekolah dari PostgreSQL | - |
 | `PUT` | `/api/v1/knowledge` | Update dinamis profil sekolah ke PostgreSQL | Body: Schema Update |
+| `POST`| `/api/v1/knowledge/sync` | Sinkronisasi ulang data SK sekolah | - |
 | `GET` | `/api/v1/knowledge/entities` | **List entitas dinamis kustom** | `page`, `limit`, `q`, `category`, `isActive`, `sortBy`, `sortOrder` |
 | `POST` | `/api/v1/knowledge/entities` | **Tambah entitas pengetahuan kustom baru** | Auto Live Grounding ke memori AI |
 | `GET` | `/api/v1/knowledge/entities/:id` | Detail entitas pengetahuan kustom | Parameter `id` |
@@ -240,22 +290,25 @@ Spesifikasi OpenAPI 3.0 dan UI Interaktif: **`http://localhost:3000/reference`**
 | `GET` | `/api/v1/whatsapp/status` | Mengambil status koneksi & QR Data URL | `{ isReady, status, qrDataUrl }` |
 | `POST` | `/api/v1/whatsapp/connect` | Memicu inisialisasi WhatsApp Chromium | Generate QR code headless |
 | `POST` | `/api/v1/whatsapp/disconnect` | Memutus koneksi sesi WhatsApp | Reset state ke DISCONNECTED |
+| `POST` | `/api/v1/whatsapp/logout` | Keluar sesi WhatsApp dan bersihkan auth | Reset session directory |
 | `POST` | `/api/v1/whatsapp/send-test` | Kirim pesan WhatsApp manual | Body: `{ targetNumber, message }` |
 
 ---
 
 ## ⚡ Panduan Menjalankan Sistem (Quick Start)
 
-Perintah dapat dijalankan langsung dari **root repository** (otomatis mendelegasikan ke `backend`) atau dari dalam folder `backend/`:
+Aplikasi terdiri dari **Backend REST API Engine** (`http://localhost:3000`) dan **Frontend Client Dashboard** (`http://localhost:3001`):
 
-### 1. Instalasi Dependensi
+### 1. Instalasi Dependensi Seluruh Monorepo
 ```bash
+# Instalasi backend:
 npm install --prefix backend
-# ATAU jika masuk ke folder backend:
-# cd backend && npm install
+
+# Instalasi frontend:
+npm install --prefix fe
 ```
 
-### 2. Konfigurasi Environment
+### 2. Konfigurasi Environment Backend
 Salin template konfigurasi:
 ```bash
 cp backend/.env.example backend/.env
@@ -267,33 +320,38 @@ Sesuaikan variabel lingkungan di file `backend/.env`:
 
 ### 3. Migrasi & Seed Database PostgreSQL
 ```bash
-npm run prisma:push
-npm run prisma:seed
+npm run prisma:push --prefix backend
+npm run prisma:seed --prefix backend
 ```
 
-### 4. Menjalankan Server
+### 4. Menjalankan Server Pengembangan
+
+Jalankan di 2 tab terminal terpisah:
+
+**Terminal 1 (Backend API Engine - Port 3000):**
 ```bash
-# Mode Pengembangan (Live reload):
-npm run dev
-
-# Kompilasi TypeScript:
-npm run build
-
-# Menjalankan Produksi:
-npm start
+npm --prefix backend run dev
 ```
 
-### 5. Pengujian & Jaminan Mutu (All-Cases Tested)
+**Terminal 2 (Frontend Web Client - Port 3001):**
 ```bash
-# Menjalankan E2E Suite (24 Test Cases lulus 100%):
-npm test
+npm --prefix fe run dev
+```
 
-# Pengecekan Type-safety TypeScript:
-npm run typecheck
+* Buka Portal Publik & Pusat Kendali di browser: **`http://localhost:3001`**
+* Buka Dokumentasi Interaktif Scalar UI: **`http://localhost:3000/reference`**
 
-# Audit Linter & Format Kode:
-npm run lint
-npm run format
+### 5. Pengujian & Jaminan Mutu (100% Passing)
+```bash
+# 1. Menjalankan Vitest Backend E2E Suite (24 Test Cases):
+npm --prefix backend test
+
+# 2. Menjalankan Playwright Frontend E2E Suite (6 Test Cases):
+npm --prefix fe run test:e2e
+
+# 3. Pengecekan Type-safety TypeScript:
+npm --prefix backend run typecheck
+npm --prefix fe run typecheck
 ```
 
 ---
