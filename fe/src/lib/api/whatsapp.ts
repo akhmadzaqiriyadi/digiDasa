@@ -34,6 +34,10 @@ export async function logoutWhatsApp(): Promise<{ success: boolean; message: str
 export async function sendTestWhatsAppMessage(input: SendTestMessageInput): Promise<{ success: boolean; message: string }> {
   return apiClient('/whatsapp/send-test', {
     method: 'POST',
-    body: JSON.stringify(input)
+    body: JSON.stringify({
+      targetNumber: input.targetNumber,
+      message: input.text,
+      text: input.text
+    })
   });
 }

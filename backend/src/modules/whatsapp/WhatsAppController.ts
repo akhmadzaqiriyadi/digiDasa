@@ -4,10 +4,20 @@ import { ApiResponse } from '../../core/ApiResponse';
 import { BadRequestError } from '../../core/AppError';
 import { z } from 'zod';
 
-const SendMessageSchema = z.object({
-  targetNumber: z.string().min(8, 'Nomor tujuan minimal 8 digit'),
-  message: z.string().min(1, 'Pesan tidak boleh kosong')
-});
+const SendMessageSchema = z
+  .object({
+    targetNumber: z.string().min(8, 'Nomor tujuan minimal 8 digit'),
+    message: z.string().optional(),
+    text: z.string().optional()
+  })
+  .transform((data) => ({
+    targetNumber: data.targetNumber,
+    message: (data.message || data.text || '').trim()
+  }))
+  .refine((data) => data.message.length > 0, {
+    message: 'Pesan tidak boleh kosong',
+    path: ['message']
+  });
 
 export class WhatsAppController {
   public static getStatus(_req: Request, res: Response, next: NextFunction): void {
