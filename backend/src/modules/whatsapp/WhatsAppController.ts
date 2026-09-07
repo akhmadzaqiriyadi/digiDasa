@@ -78,12 +78,16 @@ export class WhatsAppController {
       const { targetNumber, message } = parseResult.data;
       const sentMsg = await whatsAppProvider.sendManualMessage(targetNumber, message);
 
+      const messageId = sentMsg?.id?._serialized || `msg_${Date.now()}`;
+      const to = sentMsg?.to || targetNumber;
+      const timestamp = sentMsg?.timestamp || Math.floor(Date.now() / 1000);
+
       ApiResponse.success(
         res,
         {
-          id: sentMsg.id._serialized,
-          to: sentMsg.to,
-          timestamp: sentMsg.timestamp
+          id: messageId,
+          to,
+          timestamp
         },
         `Pesan berhasil dikirim ke ${targetNumber}`
       );
