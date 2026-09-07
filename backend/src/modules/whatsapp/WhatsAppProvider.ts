@@ -243,30 +243,57 @@ export class WhatsAppProvider extends EventEmitter {
   private lastRepliedText: string = '';
 
   private async handleIncomingMessage(msg: Message): Promise<void> {
-    // Ignore group chats
-    if (msg.from.endsWith('@g.us') || msg.to?.endsWith('@g.us')) return;
+    // ── FILTER 1: Abaikan WhatsApp Status/Story broadcast ──────────────────
+    if (
+      msg.from === 'status@broadcast' ||
+      msg.from.endsWith('@broadcast') ||
+      msg.isStatus
+    ) {
+      logger.debug(`[WA Filter] Skipped broadcast/status from ${msg.from}`);
+      return;
+    }
+
+    // ── FILTER 2: Abaikan pesan grup ────────────────────────────────────────
+    if (msg.from.endsWith('@g.us') || msg.to?.endsWith('@g.us')) {
+      logger.debug(`[WA Filter] Skipped group message from ${msg.from}`);
+      return;
+    }
 
     const body = msg.body ? msg.body.trim() : '';
     if (!body) return;
 
-    // Prevent infinite loop if message is the bot's own response
+    // ── FILTER 3: Cegah infinite loop (bot balas diri sendiri) ──────────────
     if (
       body.includes('Surat Keputusan (SK) Panitia SPMB') ||
       body.includes('ADAPTIVA-BOT') ||
+      body.includes('📌 *Informasi ini resmi') ||
       body === this.lastRepliedText
     ) {
       return;
     }
 
-    const sender = msg.from;
+    // ── FILTER 4: Hanya balas nomor Indonesia (62xxx) atau self-chat test ────
+    // Nomor Indonesia: diawali dengan 62 atau LID dengan awalan Indonesia
+    const senderRaw = msg.from.split('@')[0];
     const isSelfChat =
       msg.fromMe && (msg.to === msg.from || msg.to?.includes(msg.from.split('@')[0]));
 
-    // If it's fromMe but NOT a self-chat test, ignore (regular outgoing reply to another person)
+    const isIndonesianNumber =
+      senderRaw.startsWith('62') ||    // format internasional Indonesia
+      senderRaw.startsWith('0') ||     // format lokal (jarang tapi aman)
+      msg.from.endsWith('@lid');       // LID contacts (WhatsApp new ID format — bisa siapa saja)
+
+    if (!isSelfChat && !isIndonesianNumber) {
+      logger.warn(`[WA Filter] Skipped non-Indonesian sender: ${msg.from}`);
+      return;
+    }
+
+    // ── FILTER 5: Abaikan pesan keluar bot ke orang lain ───────────────────
     if (msg.fromMe && !isSelfChat) {
       return;
     }
 
+    const sender = msg.from;
     logger.info(`[WA Received] From: ${sender} | Text: "${body}" | SelfChat: ${isSelfChat}`);
 
     try {
