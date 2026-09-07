@@ -1,7 +1,17 @@
 <div align="center">
-  <img src="./docs/assets/hero_banner.jpg" alt="ADAPTIVA-BOT Hero Banner" width="100%" style="border-radius: 16px; margin-bottom: 20px;" />
+  <img src="./docs/assets/hero_banner.jpg" alt="ADAPTIVA-BOT SMK Negeri 1 Adiwerna Hero Banner" width="100%" style="border-radius: 16px; margin-bottom: 24px;" />
 
-  # 🚀 ADAPTIVA-BOT: Cognitive Automation AI & Agile Architecture
+  <table align="center" border="0" style="border: none; margin: 10px 0;">
+    <tr style="border: none;">
+      <td align="center" style="border: none; padding-right: 15px;">
+        <img src="./docs/assets/logo_smk.png" alt="Logo SMK Negeri 1 Adiwerna" width="110" />
+      </td>
+      <td align="left" style="border: none;">
+        <h1 style="margin: 0; padding: 0; border-bottom: none;">🚀 ADAPTIVA-BOT</h1>
+        <h3 style="margin: 4px 0 0 0; color: #64748b; font-weight: 500;">SMK Negeri 1 Adiwerna (STM ADB) • DIGIForward 2026–2027</h3>
+      </td>
+    </tr>
+  </table>
 
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Node.js](https://img.shields.io/badge/Node.js-v20+-green?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -285,6 +295,27 @@ npm run typecheck
 npm run lint
 npm run format
 ```
+
+---
+
+## 🏫 Profil & Kampus SMK Negeri 1 Adiwerna (STM ADB)
+
+<div align="center">
+  <table align="center" style="width: 100%; border: none;">
+    <tr align="center" style="border: none;">
+      <td style="border: none; padding: 10px; text-align: center;">
+        <img src="./docs/assets/gedung_gerbang.png" alt="Gerbang Utama SMK Negeri 1 Adiwerna (STM ADB)" width="420" style="border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);" />
+        <br />
+        <sub><strong>🚪 Gerbang Utama & Portal Masuk (STM ADB)</strong></sub>
+      </td>
+      <td style="border: none; padding: 10px; text-align: center;">
+        <img src="./docs/assets/gedung_utama.jpg" alt="Gedung Pembelajaran & Laboratorium TEFA" width="420" style="border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);" />
+        <br />
+        <sub><strong>🏢 Gedung Pembelajaran, Laboratorium & TEFA</strong></sub>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 

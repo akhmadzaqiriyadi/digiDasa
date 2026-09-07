@@ -1,7 +1,17 @@
 <div align="center">
-  <img src="../docs/assets/hero_banner.jpg" alt="ADAPTIVA-BOT Hero Banner" width="100%" style="border-radius: 16px; margin-bottom: 20px;" />
+  <img src="../docs/assets/hero_banner.jpg" alt="ADAPTIVA-BOT SMK Negeri 1 Adiwerna Hero Banner" width="100%" style="border-radius: 16px; margin-bottom: 24px;" />
 
-  # ⚙️ ADAPTIVA-BOT: Backend REST API & Cognitive Core Engine
+  <table align="center" border="0" style="border: none; margin: 10px 0;">
+    <tr style="border: none;">
+      <td align="center" style="border: none; padding-right: 15px;">
+        <img src="../docs/assets/logo_smk.png" alt="Logo SMK Negeri 1 Adiwerna" width="100" />
+      </td>
+      <td align="left" style="border: none;">
+        <h1 style="margin: 0; padding: 0; border-bottom: none;">⚙️ ADAPTIVA-BOT Backend</h1>
+        <h3 style="margin: 4px 0 0 0; color: #64748b; font-weight: 500;">Core REST API & AI Engine Service • SMK Negeri 1 Adiwerna</h3>
+      </td>
+    </tr>
+  </table>
 
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Express](https://img.shields.io/badge/Express-v5.2-black?logo=express&logoColor=white)](https://expressjs.com/)
