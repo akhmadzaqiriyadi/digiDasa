@@ -356,22 +356,6 @@ npm --prefix fe run typecheck
 
 ---
 
-## 🏫 Profil & Kampus SMK Negeri 1 Adiwerna (STM ADB)
-
-> [!NOTE]
-> **Pemisah Fisik Bangunan:** Di bawah ini merupakan dokumentasi 2 (dua) fasilitas fisik bangunan yang berbeda di lingkungan SMK Negeri 1 Adiwerna (STM ADB) dengan garis pembatas visual:
-
-<div align="center">
-
-| 🚪 **GEDUNG 1: GERBANG UTAMA (STM ADB)** | ⚡ **GARIS PEMISAH BANGUNAN** ⚡ | 🏢 **GEDUNG 2: KOMPLEKS KELAS & TEFA** |
-| :---: | :---: | :---: |
-| <img src="./docs/assets/gedung_gerbang.png" alt="Gerbang Utama SMK Negeri 1 Adiwerna (STM ADB)" width="380" /> | <img src="./docs/assets/vertical_divider.svg" alt="Pemisah Gedung" height="240" /><br/><sub>**LOKASI 1** ⟵ ❖ ⟶ **LOKASI 2**<br/>*(Fisik Bangunan Berbeda)*</sub> | <img src="./docs/assets/gedung_utama.jpg" alt="Gedung Pembelajaran & Laboratorium TEFA" width="380" /> |
-| **Gerbang Kedatangan & Pos Masuk**<br/><sub>Akses utama kedatangan siswa, pos piket satpam, tamu dinas, dan gerbang pendaftaran SPMB</sub> | ╏<br/>╏<br/>╏ | **Kompleks Ruang Kelas, Lab & Bengkel TEFA**<br/><sub>Gedung pembelajaran teori, bengkel teknik kejuruan industri, dan laboratorium komputer</sub> |
-
-</div>
-
----
-
 ## 🤝 Tim Pengembang & Penanggung Jawab
 * **Lembaga:** SMK Negeri 1 Adiwerna (STM ADB), Kabupaten Tegal, Jawa Tengah.
 * **Inisiatif:** Program DIGIForward 2026–2027 *(PT Generasi Edukator Indonesia / GenEd, Cabang Dinas Pendidikan Wilayah XII Jateng, & CTI Group)*.
