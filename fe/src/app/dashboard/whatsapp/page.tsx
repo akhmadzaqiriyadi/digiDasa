@@ -20,6 +20,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   MessageSquare,
   QrCode,
   Send,
@@ -72,16 +83,6 @@ export default function WhatsAppDashboardPage() {
     });
   };
 
-  const handleLogout = () => {
-    if (confirm('Apakah Anda yakin ingin keluar dari sesi WhatsApp ini? File auth session akan dibersihkan dan Anda perlu scan QR ulang.')) {
-      logoutMutation.mutate();
-    }
-  };
-
-  const handleDisconnect = () => {
-    disconnectMutation.mutate();
-  };
-
   return (
     <div className="space-y-6">
       {/* Alert Header */}
@@ -116,31 +117,61 @@ export default function WhatsAppDashboardPage() {
                   size="sm"
                   onClick={() => refetch()}
                   disabled={isRefetching}
-                  className="text-xs gap-1"
+                  className="text-xs gap-1 cursor-pointer"
                 >
                   <RefreshCw className={`h-3 w-3 ${isRefetching ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDisconnect}
-                  disabled={disconnectMutation.isPending}
-                  className="text-xs gap-1 text-amber-600 hover:text-amber-700"
-                >
-                  <PowerOff className="h-3 w-3" />
-                  Putuskan Sambungan
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleLogout}
-                  disabled={logoutMutation.isPending}
-                  className="text-xs gap-1"
-                >
-                  <LogOut className="h-3 w-3" />
-                  Keluar Sesi WA (Logout)
-                </Button>
+
+                {/* Disconnect Alert Dialog */}
+                <AlertDialog>
+                  <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 border border-border bg-background hover:bg-muted text-amber-600 hover:text-amber-700 gap-1 cursor-pointer">
+                    <PowerOff className="h-3 w-3" />
+                    Putuskan Sambungan
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Putuskan Sambungan WhatsApp?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Klien browser WhatsApp akan ditutup sementara. Sesi login tetap tersimpan di database dan dapat dihubungkan kembali kapan saja.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => disconnectMutation.mutate()}
+                        className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
+                      >
+                        Ya, Putuskan
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Logout Alert Dialog */}
+                <AlertDialog>
+                  <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-2.5 bg-destructive hover:bg-destructive/90 text-white gap-1 cursor-pointer">
+                    <LogOut className="h-3 w-3" />
+                    Keluar Sesi WA (Logout)
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Konfirmasi Keluar Sesi (Logout)</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Apakah Anda yakin ingin keluar dari sesi WhatsApp ini? File session LocalAuth akan dibersihkan dan Anda perlu melakukan scan QR ulang.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => logoutMutation.mutate()}
+                        className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                      >
+                        Ya, Keluar Sesi
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardHeader>
 
@@ -171,16 +202,29 @@ export default function WhatsAppDashboardPage() {
 
                   {/* Tombol Keluar Sesi WA */}
                   <div className="pt-2">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleLogout}
-                      disabled={logoutMutation.isPending}
-                      className="text-xs gap-1.5"
-                    >
-                      <LogOut className="h-3.5 w-3.5" />
-                      {logoutMutation.isPending ? 'Mengeluarkan sesi...' : 'Keluar Sesi WA (Logout)'}
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-3 bg-destructive hover:bg-destructive/90 text-white gap-1.5 cursor-pointer">
+                        <LogOut className="h-3.5 w-3.5" />
+                        Keluar Sesi WA (Logout)
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Konfirmasi Keluar Sesi</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Sesi WhatsApp akan diputuskan dan auth session lokal akan dibersihkan.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => logoutMutation.mutate()}
+                            className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                          >
+                            Ya, Keluar Sesi
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ) : hasQr ? (
@@ -240,20 +284,34 @@ export default function WhatsAppDashboardPage() {
                     <Button
                       onClick={() => connectMutation.mutate()}
                       disabled={connectMutation.isPending}
-                      className="bg-orange-500 hover:bg-orange-600 text-white gap-2 text-xs"
+                      className="bg-orange-500 hover:bg-orange-600 text-white gap-2 text-xs cursor-pointer"
                     >
                       <Zap className="h-3.5 w-3.5" />
                       {connectMutation.isPending ? 'Mereset & Memulai...' : 'Hubungkan Ulang (Reconnect)'}
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleLogout}
-                      disabled={logoutMutation.isPending}
-                      className="text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
-                    >
-                      <LogOut className="h-3.5 w-3.5" />
-                      Reset Auth Folder
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-3 border border-destructive/30 text-destructive hover:bg-destructive/10 gap-1.5 cursor-pointer">
+                        <LogOut className="h-3.5 w-3.5" />
+                        Reset Auth Folder
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Auth Folder?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tindakan ini akan menghapus folder session lokal dan membersihkan status login.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => logoutMutation.mutate()}
+                            className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                          >
+                            Ya, Bersihkan
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ) : (

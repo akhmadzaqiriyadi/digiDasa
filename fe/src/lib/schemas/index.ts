@@ -148,11 +148,31 @@ export const SchoolKnowledgeResponseSchema = z.object({
   timestamp: z.string().optional()
 });
 
+export const CreateJurusanSchema = z.object({
+  kode: z.string().min(2, 'Kode jurusan minimal 2 karakter'),
+  nama: z.string().min(3, 'Nama jurusan minimal 3 karakter'),
+  akreditasi: z.string().min(1, 'Akreditasi wajib diisi'),
+  kuota: z.number().min(1, 'Kuota minimal 1 siswa'),
+  deskripsi: z.string().min(5, 'Deskripsi minimal 5 karakter'),
+  prospek_kerja: z.string().optional()
+});
+
+export type CreateJurusanInput = z.infer<typeof CreateJurusanSchema>;
+
+export const CreateFaqSchema = z.object({
+  q: z.string().min(5, 'Pertanyaan minimal 5 karakter'),
+  a: z.string().min(5, 'Jawaban minimal 5 karakter'),
+  category: z.string().min(2, 'Kategori wajib diisi'),
+  order: z.number()
+});
+
+export type CreateFaqInput = z.infer<typeof CreateFaqSchema>;
+
 export const CreateEntitySchema = z.object({
   category: z.string().min(2, 'Kategori minimal 2 karakter'),
   title: z.string().min(3, 'Judul minimal 3 karakter'),
   content: z.string().min(5, 'Konten minimal 5 karakter'),
-  order: z.number().optional()
+  order: z.number()
 });
 
 export type CreateEntityInput = z.infer<typeof CreateEntitySchema>;

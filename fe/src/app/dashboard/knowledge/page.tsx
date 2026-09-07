@@ -7,7 +7,14 @@ import {
   useSchoolKnowledge,
   useSyncKnowledge,
   useCreateCustomEntity,
-  useDeleteCustomEntity
+  useUpdateCustomEntity,
+  useDeleteCustomEntity,
+  useCreateJurusan,
+  useUpdateJurusan,
+  useDeleteJurusan,
+  useCreateFaq,
+  useUpdateFaq,
+  useDeleteFaq
 } from '@/hooks/use-knowledge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,9 +23,36 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { JurusanItem, FaqItem, CustomEntity, CreateEntitySchema, CreateEntityInput } from '@/lib/schemas';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  JurusanItem,
+  FaqItem,
+  CustomEntity,
+  CreateEntitySchema,
+  CreateEntityInput,
+  CreateJurusanSchema,
+  CreateJurusanInput,
+  CreateFaqSchema,
+  CreateFaqInput
+} from '@/lib/schemas';
 import { Pagination } from '@/components/common/pagination';
 import {
   Database,
@@ -27,14 +61,25 @@ import {
   Plus,
   RefreshCw,
   Trash2,
+  Pencil,
   Layers,
   Search,
   X,
-  Filter
+  Filter,
+  Sparkles
 } from 'lucide-react';
 
+const CATEGORY_PRESETS = [
+  'PENGUMUMAN',
+  'BEASISWA',
+  'TATA_TERTIB',
+  'FASILITAS',
+  'KERJASAMA_INDUSTRI',
+  'MAGANG_LUAR_NEGERI',
+  'EKSTRAKURIKULER'
+];
+
 export default function KnowledgeDashboardPage() {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [faqCategoryFilter, setFaqCategoryFilter] = useState('ALL');
   const [entityCategoryFilter, setEntityCategoryFilter] = useState('ALL');
@@ -47,16 +92,74 @@ export default function KnowledgeDashboardPage() {
   const FAQ_PER_PAGE = 5;
   const ENTITY_PER_PAGE = 4;
 
+  // Dialog states for CRUD
+  const [jurusanModalOpen, setJurusanModalOpen] = useState(false);
+  const [editingJurusan, setEditingJurusan] = useState<JurusanItem | null>(null);
+
+  const [faqModalOpen, setFaqModalOpen] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
+
+  const [entityModalOpen, setEntityModalOpen] = useState(false);
+  const [editingEntity, setEditingEntity] = useState<CustomEntity | null>(null);
+
+  // Queries & Mutations
   const { data: knowledgeResponse, isLoading } = useSchoolKnowledge();
   const syncMutation = useSyncKnowledge();
+
+  const createJurusanMutation = useCreateJurusan();
+  const updateJurusanMutation = useUpdateJurusan();
+  const deleteJurusanMutation = useDeleteJurusan();
+
+  const createFaqMutation = useCreateFaq();
+  const updateFaqMutation = useUpdateFaq();
+  const deleteFaqMutation = useDeleteFaq();
+
   const createEntityMutation = useCreateCustomEntity();
+  const updateEntityMutation = useUpdateCustomEntity();
   const deleteEntityMutation = useDeleteCustomEntity();
 
+  // Forms
   const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors }
+    register: registerJurusan,
+    handleSubmit: handleSubmitJurusan,
+    reset: resetJurusan,
+    setValue: setValueJurusan,
+    formState: { errors: errorsJurusan }
+  } = useForm<CreateJurusanInput>({
+    resolver: zodResolver(CreateJurusanSchema),
+    defaultValues: {
+      kode: '',
+      nama: '',
+      kuota: 72,
+      akreditasi: 'A (Unggul)',
+      deskripsi: '',
+      prospek_kerja: ''
+    }
+  });
+
+  const {
+    register: registerFaq,
+    handleSubmit: handleSubmitFaq,
+    reset: resetFaq,
+    setValue: setValueFaq,
+    formState: { errors: errorsFaq }
+  } = useForm<CreateFaqInput>({
+    resolver: zodResolver(CreateFaqSchema),
+    defaultValues: {
+      q: '',
+      a: '',
+      category: 'SPMB',
+      order: 0
+    }
+  });
+
+  const {
+    register: registerEntity,
+    handleSubmit: handleSubmitEntity,
+    reset: resetEntity,
+    setValue: setValueEntity,
+    watch: watchEntity,
+    formState: { errors: errorsEntity }
   } = useForm<CreateEntityInput>({
     resolver: zodResolver(CreateEntitySchema),
     defaultValues: {
@@ -66,6 +169,8 @@ export default function KnowledgeDashboardPage() {
       order: 0
     }
   });
+
+  const selectedEntityCategory = watchEntity('category');
 
   const kData = knowledgeResponse?.data;
   const jurusans = React.useMemo(() => kData?.jurusans || [], [kData]);
@@ -165,13 +270,132 @@ export default function KnowledgeDashboardPage() {
     setEntityPage(1);
   };
 
-  const onSubmitEntity = (data: CreateEntityInput) => {
-    createEntityMutation.mutate(data, {
-      onSuccess: () => {
-        setIsAddModalOpen(false);
-        reset();
-      }
+  // Open Handlers for CRUD
+  const handleOpenAddJurusan = () => {
+    setEditingJurusan(null);
+    resetJurusan({
+      kode: '',
+      nama: '',
+      kuota: 72,
+      akreditasi: 'A (Unggul)',
+      deskripsi: '',
+      prospek_kerja: ''
     });
+    setJurusanModalOpen(true);
+  };
+
+  const handleOpenEditJurusan = (j: JurusanItem) => {
+    setEditingJurusan(j);
+    setValueJurusan('kode', j.kode);
+    setValueJurusan('nama', j.nama);
+    setValueJurusan('kuota', Number(j.kuota) || 72);
+    setValueJurusan('akreditasi', j.akreditasi || 'A (Unggul)');
+    setValueJurusan('deskripsi', j.deskripsi || '');
+    setValueJurusan('prospek_kerja', Array.isArray(j.peluang_karir) ? j.peluang_karir.join(', ') : '');
+    setJurusanModalOpen(true);
+  };
+
+  const onSubmitJurusan = (data: CreateJurusanInput) => {
+    if (editingJurusan) {
+      updateJurusanMutation.mutate(
+        { kode: editingJurusan.kode, payload: data },
+        {
+          onSuccess: () => {
+            setJurusanModalOpen(false);
+            setEditingJurusan(null);
+          }
+        }
+      );
+    } else {
+      createJurusanMutation.mutate(data, {
+        onSuccess: () => {
+          setJurusanModalOpen(false);
+          resetJurusan();
+        }
+      });
+    }
+  };
+
+  const handleOpenAddFaq = () => {
+    setEditingFaq(null);
+    resetFaq({
+      q: '',
+      a: '',
+      category: 'SPMB',
+      order: 0
+    });
+    setFaqModalOpen(true);
+  };
+
+  const handleOpenEditFaq = (faq: FaqItem) => {
+    setEditingFaq(faq);
+    setValueFaq('q', faq.q);
+    setValueFaq('a', faq.a);
+    setValueFaq('category', faq.category || 'SPMB');
+    setValueFaq('order', faq.order || 0);
+    setFaqModalOpen(true);
+  };
+
+  const onSubmitFaq = (data: CreateFaqInput) => {
+    if (editingFaq && editingFaq.id) {
+      updateFaqMutation.mutate(
+        { id: editingFaq.id, payload: data },
+        {
+          onSuccess: () => {
+            setFaqModalOpen(false);
+            setEditingFaq(null);
+          }
+        }
+      );
+    } else {
+      createFaqMutation.mutate(data, {
+        onSuccess: () => {
+          setFaqModalOpen(false);
+          resetFaq();
+        }
+      });
+    }
+  };
+
+  const handleOpenAddEntity = () => {
+    setEditingEntity(null);
+    resetEntity({
+      category: 'PENGUMUMAN',
+      title: '',
+      content: '',
+      order: 0
+    });
+    setEntityModalOpen(true);
+  };
+
+  const handleOpenEditEntity = (ent: CustomEntity) => {
+    setEditingEntity(ent);
+    setValueEntity('category', ent.category);
+    setValueEntity('title', ent.title);
+    setValueEntity('content', ent.content);
+    setValueEntity('order', ent.order || 0);
+    setEntityModalOpen(true);
+  };
+
+  const onSubmitEntity = (data: CreateEntityInput) => {
+    if (editingEntity) {
+      updateEntityMutation.mutate(
+        { id: editingEntity.id, payload: data },
+        {
+          onSuccess: () => {
+            setEntityModalOpen(false);
+            setEditingEntity(null);
+          }
+        }
+      );
+    } else {
+      createEntityMutation.mutate(data, {
+        onSuccess: () => {
+          setEntityModalOpen(false);
+          resetEntity();
+        }
+      });
+    }
   };
 
   return (
@@ -184,97 +408,30 @@ export default function KnowledgeDashboardPage() {
             Basis Pengetahuan Sekolah (Grounded Knowledge)
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Sumber pengetahuan resmi AI Gemini: 9 Jurusan, Dokumen SK SPMB, dan Entitas Kustom
+            Sumber pengetahuan resmi AI Gemini: Jurusan Kejuruan, FAQ SPMB, dan Entitas Kustom Sekolah
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => syncMutation.mutate()}
             disabled={syncMutation.isPending}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
             {syncMutation.isPending ? 'Sinkronisasi...' : 'Sinkronkan DB'}
           </Button>
 
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center rounded-md font-medium text-xs h-8 px-3 bg-orange-500 hover:bg-orange-600 text-white gap-1.5 cursor-pointer transition">
-              <Plus className="h-3.5 w-3.5" />
-              Tambah Entitas
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <form onSubmit={handleSubmit(onSubmitEntity)}>
-                <DialogHeader>
-                  <DialogTitle className="text-base font-bold">Tambah Entitas Pengetahuan Baru</DialogTitle>
-                  <DialogDescription className="text-xs">
-                    Entitas baru akan langsung diindeks oleh AI Gemini untuk menjawab pertanyaan siswa.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4 py-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground">Kategori</label>
-                    <Input
-                      placeholder="Contoh: BEASISWA, TATA_TERTIB, SERAGAM"
-                      {...register('category')}
-                      className="text-xs uppercase"
-                    />
-                    {errors.category && (
-                      <p className="text-[11px] text-red-500 font-medium">{errors.category.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground">Judul / Topik</label>
-                    <Input
-                      placeholder="Contoh: Beasiswa Prestasi Jalur Tahfidz & KIP"
-                      {...register('title')}
-                      className="text-xs"
-                    />
-                    {errors.title && (
-                      <p className="text-[11px] text-red-500 font-medium">{errors.title.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground">Isi Pengetahuan Lengkap</label>
-                    <Textarea
-                      rows={4}
-                      placeholder="Tuliskan detail aturan, rincian biaya, atau jadwal..."
-                      {...register('content')}
-                      className="text-xs resize-none"
-                    />
-                    {errors.content && (
-                      <p className="text-[11px] text-red-500 font-medium">{errors.content.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="text-xs"
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={createEntityMutation.isPending}
-                    className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
-                  >
-                    {createEntityMutation.isPending ? 'Menyimpan...' : 'Simpan ke Database'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button
+            size="sm"
+            onClick={handleOpenAddEntity}
+            className="bg-orange-500 hover:bg-orange-600 text-white text-xs gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Tambah Entitas
+          </Button>
         </div>
       </div>
 
@@ -306,7 +463,7 @@ export default function KnowledgeDashboardPage() {
               variant="outline"
               size="sm"
               onClick={clearAllFilters}
-              className="text-xs h-9 text-muted-foreground hover:text-foreground gap-1"
+              className="text-xs h-9 text-muted-foreground hover:text-foreground gap-1 cursor-pointer"
             >
               <X className="h-3 w-3" />
               Reset Pencarian
@@ -318,22 +475,39 @@ export default function KnowledgeDashboardPage() {
       {/* Tabs */}
       <Tabs defaultValue="jurusans" className="space-y-4">
         <TabsList className="bg-card border border-border">
-          <TabsTrigger value="jurusans" className="text-xs gap-1.5">
+          <TabsTrigger value="jurusans" className="text-xs gap-1.5 cursor-pointer">
             <GraduationCap className="h-3.5 w-3.5" />
             Jurusan Unggulan ({filteredJurusans.length})
           </TabsTrigger>
-          <TabsTrigger value="faqs" className="text-xs gap-1.5">
+          <TabsTrigger value="faqs" className="text-xs gap-1.5 cursor-pointer">
             <HelpCircle className="h-3.5 w-3.5" />
             FAQ Populer ({filteredFaqs.length})
           </TabsTrigger>
-          <TabsTrigger value="custom" className="text-xs gap-1.5">
+          <TabsTrigger value="custom" className="text-xs gap-1.5 cursor-pointer">
             <Layers className="h-3.5 w-3.5" />
             Entitas Dinamis ({filteredEntities.length})
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Jurusans */}
+        {/* ========================================== */}
+        {/* Tab 1: Jurusans (Full CRUD) */}
+        {/* ========================================== */}
         <TabsContent value="jurusans" className="space-y-4">
+          <div className="flex items-center justify-between pb-1">
+            <p className="text-xs text-muted-foreground">
+              Kelola konsentrasi keahlian, kuota daya tampung, dan prospek karir yang dikenali AI
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenAddJurusan}
+              className="text-xs h-8 gap-1.5 border-orange-500/40 text-orange-600 hover:bg-orange-500/10 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Tambah Jurusan
+            </Button>
+          </div>
+
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
@@ -345,7 +519,7 @@ export default function KnowledgeDashboardPage() {
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm font-semibold text-foreground">Tidak Ada Jurusan yang Sesuai</p>
               <p className="text-xs mt-1">Tidak ditemukan program keahlian dengan kata kunci &ldquo;{searchQuery}&rdquo;</p>
-              <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3 text-xs">
+              <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3 text-xs cursor-pointer">
                 Reset Pencarian
               </Button>
             </Card>
@@ -353,15 +527,47 @@ export default function KnowledgeDashboardPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {paginatedJurusans.map((j: JurusanItem) => (
-                  <Card key={j.kode} className="border-border/80 shadow-sm flex flex-col justify-between">
+                  <Card key={j.kode} className="border-border/80 shadow-sm flex flex-col justify-between hover:border-orange-500/40 transition">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-xs font-bold">
                           {j.kode}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px]">
-                          Akreditasi {j.akreditasi}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenEditJurusan(j)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Edit Jurusan"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+
+                          {/* Delete AlertDialog */}
+                          <AlertDialog>
+                            <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md text-xs h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Hapus Jurusan {j.kode}?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Apakah Anda yakin ingin menghapus jurusan <strong>{j.nama}</strong> ({j.kode})? Informasi kurikulum dan kuota jurusan ini tidak akan lagi dijawab oleh AI bot.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteJurusanMutation.mutate(j.kode)}
+                                  className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                                >
+                                  Ya, Hapus Jurusan
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                       <CardTitle className="text-sm font-bold mt-2">
                         {j.nama}
@@ -377,7 +583,7 @@ export default function KnowledgeDashboardPage() {
                           <span className="text-[10px] font-semibold text-muted-foreground uppercase">
                             Prospek Karir:
                           </span>
-                          <p className="text-[11px] text-foreground mt-0.5">
+                          <p className="text-[11px] text-foreground mt-0.5 line-clamp-2">
                             {j.peluang_karir.slice(0, 3).join(', ')}
                           </p>
                         </div>
@@ -404,32 +610,46 @@ export default function KnowledgeDashboardPage() {
           )}
         </TabsContent>
 
-        {/* Tab 2: FAQs */}
+        {/* ========================================== */}
+        {/* Tab 2: FAQs (Full CRUD) */}
+        {/* ========================================== */}
         <TabsContent value="faqs" className="space-y-4">
-          {faqCategories.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-              <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
-                <Filter className="h-3 w-3" /> Kategori:
-              </span>
-              <Badge
-                variant={faqCategoryFilter === 'ALL' ? 'default' : 'outline'}
-                className="cursor-pointer text-[11px]"
-                onClick={() => { setFaqCategoryFilter('ALL'); setFaqPage(1); }}
-              >
-                Semua ({faqs.length})
-              </Badge>
-              {faqCategories.map((cat) => (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {faqCategories.length > 0 ? (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
+                  <Filter className="h-3 w-3" /> Kategori:
+                </span>
                 <Badge
-                  key={cat}
-                  variant={faqCategoryFilter === cat ? 'default' : 'outline'}
+                  variant={faqCategoryFilter === 'ALL' ? 'default' : 'outline'}
                   className="cursor-pointer text-[11px]"
-                  onClick={() => { setFaqCategoryFilter(cat); setFaqPage(1); }}
+                  onClick={() => { setFaqCategoryFilter('ALL'); setFaqPage(1); }}
                 >
-                  {cat}
+                  Semua ({faqs.length})
                 </Badge>
-              ))}
-            </div>
-          )}
+                {faqCategories.map((cat) => (
+                  <Badge
+                    key={cat}
+                    variant={faqCategoryFilter === cat ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px]"
+                    onClick={() => { setFaqCategoryFilter(cat); setFaqPage(1); }}
+                  >
+                    {cat}
+                  </Badge>
+                ))}
+              </div>
+            ) : <div />}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenAddFaq}
+              className="text-xs h-8 gap-1.5 border-orange-500/40 text-orange-600 hover:bg-orange-500/10 self-start sm:self-auto cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Tambah FAQ
+            </Button>
+          </div>
 
           <Card className="border-border/80 shadow-sm">
             <CardHeader>
@@ -446,24 +666,70 @@ export default function KnowledgeDashboardPage() {
                   <Search className="h-7 w-7 mx-auto mb-2 opacity-50" />
                   <p className="text-sm font-semibold text-foreground">Tidak Ada FAQ yang Cocok</p>
                   <p className="text-xs mt-1">Coba gunakan kata kunci pencarian lain atau pilih kategori &ldquo;Semua&rdquo;</p>
-                  <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3 text-xs">
+                  <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3 text-xs cursor-pointer">
                     Reset Pencarian
                   </Button>
                 </div>
               ) : (
                 <>
-                  <Accordion className="w-full">
+                  <div className="divide-y divide-border/60">
                     {paginatedFaqs.map((faq: FaqItem, idx: number) => (
-                      <AccordionItem key={faq.id || idx} value={`item-${idx}`}>
-                        <AccordionTrigger className="text-xs font-semibold text-left">
-                          {faq.q}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                          {faq.a}
-                        </AccordionContent>
-                      </AccordionItem>
+                      <div key={faq.id || idx} className="py-3.5 first:pt-0 last:pb-0 space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              {faq.category && (
+                                <Badge variant="secondary" className="text-[10px] font-semibold uppercase">
+                                  {faq.category}
+                                </Badge>
+                              )}
+                              <h4 className="text-xs sm:text-sm font-semibold text-foreground">
+                                {faq.q}
+                              </h4>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line pl-0.5">
+                              {faq.a}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEditFaq(faq)}
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                              title="Edit FAQ"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md text-xs h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Hapus Pertanyaan FAQ?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Apakah Anda yakin ingin menghapus FAQ: &ldquo;{faq.q}&rdquo;?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => faq.id && deleteFaqMutation.mutate(faq.id)}
+                                    className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                                  >
+                                    Ya, Hapus FAQ
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </Accordion>
+                  </div>
 
                   <Pagination
                     currentPage={faqPage}
@@ -478,32 +744,46 @@ export default function KnowledgeDashboardPage() {
           </Card>
         </TabsContent>
 
-        {/* Tab 3: Custom Entities */}
+        {/* ========================================== */}
+        {/* Tab 3: Custom Entities (Full CRUD) */}
+        {/* ========================================== */}
         <TabsContent value="custom" className="space-y-4">
-          {entityCategories.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-              <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
-                <Filter className="h-3 w-3" /> Kategori:
-              </span>
-              <Badge
-                variant={entityCategoryFilter === 'ALL' ? 'default' : 'outline'}
-                className="cursor-pointer text-[11px]"
-                onClick={() => { setEntityCategoryFilter('ALL'); setEntityPage(1); }}
-              >
-                Semua ({entities.length})
-              </Badge>
-              {entityCategories.map((cat) => (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {entityCategories.length > 0 ? (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
+                  <Filter className="h-3 w-3" /> Kategori:
+                </span>
                 <Badge
-                  key={cat}
-                  variant={entityCategoryFilter === cat ? 'default' : 'outline'}
+                  variant={entityCategoryFilter === 'ALL' ? 'default' : 'outline'}
                   className="cursor-pointer text-[11px]"
-                  onClick={() => { setEntityCategoryFilter(cat); setEntityPage(1); }}
+                  onClick={() => { setEntityCategoryFilter('ALL'); setEntityPage(1); }}
                 >
-                  {cat}
+                  Semua ({entities.length})
                 </Badge>
-              ))}
-            </div>
-          )}
+                {entityCategories.map((cat) => (
+                  <Badge
+                    key={cat}
+                    variant={entityCategoryFilter === cat ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px]"
+                    onClick={() => { setEntityCategoryFilter(cat); setEntityPage(1); }}
+                  >
+                    {cat}
+                  </Badge>
+                ))}
+              </div>
+            ) : <div />}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenAddEntity}
+              className="text-xs h-8 gap-1.5 border-orange-500/40 text-orange-600 hover:bg-orange-500/10 self-start sm:self-auto cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Tambah Entitas
+            </Button>
+          </div>
 
           {entities.length === 0 ? (
             <Card className="border-dashed p-8 text-center text-muted-foreground">
@@ -516,7 +796,7 @@ export default function KnowledgeDashboardPage() {
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm font-semibold text-foreground">Tidak Ada Entitas yang Cocok</p>
               <p className="text-xs mt-1">Tidak ada pengumuman atau entitas dengan kata kunci &ldquo;{searchQuery}&rdquo;</p>
-              <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3 text-xs">
+              <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3 text-xs cursor-pointer">
                 Reset Pencarian
               </Button>
             </Card>
@@ -524,21 +804,46 @@ export default function KnowledgeDashboardPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {paginatedEntities.map((ent: CustomEntity) => (
-                  <Card key={ent.id} className="border-border/80 shadow-sm flex flex-col justify-between">
+                  <Card key={ent.id} className="border-border/80 shadow-sm flex flex-col justify-between hover:border-orange-500/40 transition">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <Badge variant="outline" className="text-[10px] uppercase font-bold text-orange-600 dark:text-orange-400">
                           {ent.category}
                         </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteEntityMutation.mutate(ent.id)}
-                          disabled={deleteEntityMutation.isPending}
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500 cursor-pointer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenEditEntity(ent)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Edit Entitas"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger className="inline-flex items-center justify-center rounded-md text-xs h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Hapus Entitas Pengetahuan?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Apakah Anda yakin ingin menghapus <strong>{ent.title}</strong>? Pengetahuan ini akan dihapus dari grounding AI.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteEntityMutation.mutate(ent.id)}
+                                  className="bg-destructive hover:bg-destructive/90 text-white cursor-pointer"
+                                >
+                                  Ya, Hapus Entitas
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                       <CardTitle className="text-sm font-bold mt-2">
                         {ent.title}
@@ -564,6 +869,292 @@ export default function KnowledgeDashboardPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* ============================================================== */}
+      {/* 1. Modal Dialog: Tambah / Edit Jurusan                          */}
+      {/* ============================================================== */}
+      <Dialog open={jurusanModalOpen} onOpenChange={setJurusanModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <form onSubmit={handleSubmitJurusan(onSubmitJurusan)}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold">
+                {editingJurusan ? `Edit Jurusan (${editingJurusan.kode})` : 'Tambah Program Jurusan Baru'}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Informasi program jurusan akan otomatis diintegrasikan ke memory AI untuk menjawab pertanyaan PPDB.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3.5 py-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">Kode Jurusan</label>
+                  <Input
+                    placeholder="Contoh: RPL, TKJ, TBSM"
+                    {...registerJurusan('kode')}
+                    disabled={Boolean(editingJurusan)}
+                    className="text-xs uppercase"
+                  />
+                  {errorsJurusan.kode && (
+                    <p className="text-[11px] text-destructive">{errorsJurusan.kode.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">Daya Tampung (Kuota)</label>
+                  <Input
+                    type="number"
+                    placeholder="Contoh: 72"
+                    {...registerJurusan('kuota')}
+                    className="text-xs"
+                  />
+                  {errorsJurusan.kuota && (
+                    <p className="text-[11px] text-destructive">{errorsJurusan.kuota.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Nama Lengkap Jurusan</label>
+                <Input
+                  placeholder="Contoh: Rekayasa Perangkat Lunak & AI Automation"
+                  {...registerJurusan('nama')}
+                  className="text-xs"
+                />
+                {errorsJurusan.nama && (
+                  <p className="text-[11px] text-destructive">{errorsJurusan.nama.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Deskripsi &amp; Fokus Pembelajaran</label>
+                <Textarea
+                  rows={3}
+                  placeholder="Fokus keahlian, materi praktik, sertifikasi..."
+                  {...registerJurusan('deskripsi')}
+                  className="text-xs resize-none"
+                />
+                {errorsJurusan.deskripsi && (
+                  <p className="text-[11px] text-destructive">{errorsJurusan.deskripsi.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Prospek Karir (Pisahkan dengan koma)</label>
+                <Input
+                  placeholder="Contoh: Web Developer, DevOps Engineer, IT Support"
+                  {...registerJurusan('prospek_kerja')}
+                  className="text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setJurusanModalOpen(false)}
+                className="text-xs cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createJurusanMutation.isPending || updateJurusanMutation.isPending}
+                className="bg-orange-500 hover:bg-orange-600 text-white text-xs cursor-pointer"
+              >
+                {createJurusanMutation.isPending || updateJurusanMutation.isPending
+                  ? 'Menyimpan...'
+                  : editingJurusan
+                  ? 'Perbarui Jurusan'
+                  : 'Simpan Jurusan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================================== */}
+      {/* 2. Modal Dialog: Tambah / Edit FAQ                             */}
+      {/* ============================================================== */}
+      <Dialog open={faqModalOpen} onOpenChange={setFaqModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <form onSubmit={handleSubmitFaq(onSubmitFaq)}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold">
+                {editingFaq ? 'Edit Pertanyaan FAQ' : 'Tambah Tanya Jawab (FAQ) Baru'}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                FAQ ini menjadi rujukan utama AI bot dalam menjawab pertanyaan umum calon siswa.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3.5 py-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Kategori FAQ</label>
+                <Input
+                  placeholder="Contoh: SPMB, BIAYA, SYARAT, SERAGAM"
+                  {...registerFaq('category')}
+                  className="text-xs uppercase"
+                />
+                {errorsFaq.category && (
+                  <p className="text-[11px] text-destructive">{errorsFaq.category.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Pertanyaan</label>
+                <Input
+                  placeholder="Contoh: Apakah boleh mendaftar jika nilai rapor semester 1 kurang?"
+                  {...registerFaq('q')}
+                  className="text-xs"
+                />
+                {errorsFaq.q && (
+                  <p className="text-[11px] text-destructive">{errorsFaq.q.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Jawaban Resmi</label>
+                <Textarea
+                  rows={4}
+                  placeholder="Tuliskan jawaban yang ramah, akurat, dan sesuai kebijakan sekolah..."
+                  {...registerFaq('a')}
+                  className="text-xs resize-none"
+                />
+                {errorsFaq.a && (
+                  <p className="text-[11px] text-destructive">{errorsFaq.a.message}</p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFaqModalOpen(false)}
+                className="text-xs cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createFaqMutation.isPending || updateFaqMutation.isPending}
+                className="bg-orange-500 hover:bg-orange-600 text-white text-xs cursor-pointer"
+              >
+                {createFaqMutation.isPending || updateFaqMutation.isPending
+                  ? 'Menyimpan...'
+                  : editingFaq
+                  ? 'Perbarui FAQ'
+                  : 'Simpan FAQ'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================================== */}
+      {/* 3. Modal Dialog: Tambah / Edit Custom Entity                   */}
+      {/* ============================================================== */}
+      <Dialog open={entityModalOpen} onOpenChange={setEntityModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <form onSubmit={handleSubmitEntity(onSubmitEntity)}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold">
+                {editingEntity ? 'Edit Entitas Pengetahuan' : 'Tambah Entitas Pengetahuan Baru'}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Entitas baru akan langsung diindeks oleh AI Gemini untuk menjawab pertanyaan siswa secara real-time.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Pilih / Ketik Kategori</label>
+                <Input
+                  placeholder="Contoh: BEASISWA, TATA_TERTIB, SERAGAM"
+                  {...registerEntity('category')}
+                  className="text-xs uppercase"
+                />
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-orange-500" /> Contoh Kategori:
+                  </span>
+                  {CATEGORY_PRESETS.map((preset) => (
+                    <Badge
+                      key={preset}
+                      variant={selectedEntityCategory === preset ? 'default' : 'outline'}
+                      className="cursor-pointer text-[10px] hover:bg-orange-500/20"
+                      onClick={() => setValueEntity('category', preset)}
+                    >
+                      {preset}
+                    </Badge>
+                  ))}
+                </div>
+
+                {errorsEntity.category && (
+                  <p className="text-[11px] text-destructive">{errorsEntity.category.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Judul / Topik Pengetahuan</label>
+                <Input
+                  placeholder="Contoh: Beasiswa Prestasi Tahfidz & Keringanan Seragam KIP"
+                  {...registerEntity('title')}
+                  className="text-xs"
+                />
+                {errorsEntity.title && (
+                  <p className="text-[11px] text-destructive">{errorsEntity.title.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Isi Pengetahuan Lengkap</label>
+                <Textarea
+                  rows={4}
+                  placeholder="Tuliskan detail aturan, rincian biaya, syarat pengajuan, atau jadwal kegiatan..."
+                  {...registerEntity('content')}
+                  className="text-xs resize-none"
+                />
+                {errorsEntity.content && (
+                  <p className="text-[11px] text-destructive">{errorsEntity.content.message}</p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEntityModalOpen(false)}
+                className="text-xs cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createEntityMutation.isPending || updateEntityMutation.isPending}
+                className="bg-orange-500 hover:bg-orange-600 text-white text-xs cursor-pointer"
+              >
+                {createEntityMutation.isPending || updateEntityMutation.isPending
+                  ? 'Menyimpan...'
+                  : editingEntity
+                  ? 'Perbarui Entitas'
+                  : 'Simpan ke Database'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
