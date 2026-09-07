@@ -60,9 +60,11 @@ export default function WhatsAppDashboardPage() {
   });
 
   const status = waResponse?.data.status || 'UNKNOWN';
-  const isConnected = waResponse?.data.ready || status === 'CONNECTED' || status === 'READY';
+  const isConnected = Boolean(waResponse?.data.ready || waResponse?.data.isReady || status === 'CONNECTED' || status === 'READY');
   const qrString = waResponse?.data.qr;
+  const qrDataUrl = waResponse?.data.qrDataUrl;
   const pairingCode = waResponse?.data.pairingCode;
+  const hasQr = Boolean(qrDataUrl || qrString);
 
   const onSubmit = (data: SendTestMessageInput) => {
     sendTestMutation.mutate(data, {
@@ -154,8 +156,8 @@ export default function WhatsAppDashboardPage() {
                     <CheckCircle2 className="h-10 w-10" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-foreground">
-                      WhatsApp Gateway Terhubung &amp; Siap
+                    <h3 className="text-lg font-bold text-foreground">
+                      {waResponse?.data.user?.name || 'ADAPTIVA-BOT'} Terhubung
                     </h3>
                     <p className="text-xs text-muted-foreground max-w-sm mt-1">
                       Nomor resmi panitia SPMB aktif melayani konsultasi pendaftar 24 jam nonstop.
@@ -181,23 +183,77 @@ export default function WhatsAppDashboardPage() {
                     </Button>
                   </div>
                 </div>
-              ) : qrString ? (
+              ) : hasQr ? (
                 <div className="flex flex-col items-center text-center space-y-4 py-2">
                   <div className="p-4 bg-white rounded-2xl shadow-md border border-border">
-                    <QRCodeSVG
-                      value={qrString}
-                      size={220}
-                      level="M"
-                      includeMargin
-                    />
+                    {qrDataUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={qrDataUrl}
+                        alt="WhatsApp QR Code"
+                        className="w-[220px] h-[220px] object-contain rounded-lg"
+                      />
+                    ) : qrString ? (
+                      <QRCodeSVG
+                        value={qrString}
+                        size={220}
+                        level="M"
+                        includeMargin
+                      />
+                    ) : null}
                   </div>
                   <div>
-                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400 text-xs">
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400 text-xs font-semibold">
                       MENUNGGU SCAN QR
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-2 max-w-xs">
-                      Buka <strong>WhatsApp &gt; Perangkat Tertaut &gt; Tautkan Perangkat</strong>, lalu arahkan kamera ke kode di atas.
+                    <p className="text-xs text-muted-foreground mt-2 max-w-xs leading-relaxed">
+                      Buka WhatsApp di HP panitia &gt; <strong>Perangkat Tertaut</strong> &gt; <strong>Tautkan Perangkat</strong>, lalu scan kode QR di atas.
                     </p>
+                  </div>
+                </div>
+              ) : status === 'INITIALIZING' || connectMutation.isPending ? (
+                <div className="flex flex-col items-center text-center py-10 space-y-3">
+                  <RefreshCw className="h-10 w-10 text-orange-500 animate-spin" />
+                  <div>
+                    <h3 className="text-base font-bold text-foreground">
+                      Menyiapkan Sesi &amp; QR Code...
+                    </h3>
+                    <p className="text-xs text-muted-foreground max-w-sm mt-1">
+                      Sedang menginisialisasi browser Chromium headless. QR Code akan muncul dalam beberapa detik...
+                    </p>
+                  </div>
+                </div>
+              ) : status === 'ERROR' ? (
+                <div className="flex flex-col items-center text-center py-8 space-y-3">
+                  <div className="h-16 w-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-600">
+                    <AlertCircle className="h-10 w-10" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-red-600 dark:text-red-400">
+                      Kendala Inisialisasi Sesi
+                    </h3>
+                    <p className="text-xs text-muted-foreground max-w-sm mt-1">
+                      Browser headless sempat terkunci atau sesi terputus. Klik tombol di bawah untuk mereset dan memuat ulang sesi WhatsApp.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <Button
+                      onClick={() => connectMutation.mutate()}
+                      disabled={connectMutation.isPending}
+                      className="bg-orange-500 hover:bg-orange-600 text-white gap-2 text-xs"
+                    >
+                      <Zap className="h-3.5 w-3.5" />
+                      {connectMutation.isPending ? 'Mereset & Memulai...' : 'Hubungkan Ulang (Reconnect)'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleLogout}
+                      disabled={logoutMutation.isPending}
+                      className="text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Reset Auth Folder
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -235,7 +291,25 @@ export default function WhatsAppDashboardPage() {
             </CardContent>
 
             <CardFooter className="bg-muted/30 border-t border-border/60 text-[11px] text-muted-foreground flex justify-between">
-              <span>Status Terkini: <strong>{status}</strong></span>
+              <span className="flex items-center gap-1.5">
+                Status Terkini:{' '}
+                <Badge
+                  variant={
+                    isConnected
+                      ? 'default'
+                      : status === 'SCAN_QR'
+                      ? 'outline'
+                      : status === 'ERROR'
+                      ? 'destructive'
+                      : 'secondary'
+                  }
+                  className={`text-[10px] uppercase font-bold ${
+                    isConnected ? 'bg-emerald-600 text-white' : ''
+                  }`}
+                >
+                  {status}
+                </Badge>
+              </span>
               <span className="flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3 text-emerald-500" />
                 Anti-Ban Protection Active

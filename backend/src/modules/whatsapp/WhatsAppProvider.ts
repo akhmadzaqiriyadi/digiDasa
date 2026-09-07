@@ -2,6 +2,7 @@ import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import QRCode from 'qrcode';
 import { EventEmitter } from 'events';
 import fs from 'fs';
+import path from 'path';
 import { aiService } from '../ai/AIService';
 import { ticketService } from '../tickets/TicketService';
 import { WhatsAppFormatter } from '../../core/WhatsAppFormatter';
@@ -33,14 +34,35 @@ export class WhatsAppProvider extends EventEmitter {
     return WhatsAppProvider.instance;
   }
 
-  public connect(): void {
-    if (!this.client) {
-      this.init();
-    } else if (this.status === 'DISCONNECTED' || this.status === 'ERROR') {
-      this.client.initialize().catch((err) => {
-        logger.error('[WhatsAppProvider] Reconnect error: ' + (err?.message || err));
-      });
+  public cleanupLocks(): void {
+    const sessionDir = path.resolve('./.wwebjs_auth/session');
+    if (fs.existsSync(sessionDir)) {
+      const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'DevToolsActivePort'];
+      for (const file of lockFiles) {
+        const filePath = path.join(sessionDir, file);
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+            logger.info(`[WhatsAppProvider] Cleaned stale lock file: ${file}`);
+          } catch (e) {
+            logger.warn(`[WhatsAppProvider] Could not remove lock file ${file}: ${e}`);
+          }
+        }
+      }
     }
+  }
+
+  public async connect(): Promise<void> {
+    if (this.client) {
+      try {
+        await this.client.destroy().catch(() => {});
+      } catch {
+        // ignore
+      }
+      this.client = null;
+    }
+    this.cleanupLocks();
+    this.init();
   }
 
   public async disconnect(): Promise<void> {
@@ -92,6 +114,8 @@ export class WhatsAppProvider extends EventEmitter {
       logger.warn('[WhatsAppProvider] Client already initialized.');
       return;
     }
+
+    this.cleanupLocks();
 
     logger.info('[WhatsAppProvider] Initializing WhatsApp Client (LocalAuth)...');
     this.status = 'INITIALIZING';
@@ -262,15 +286,21 @@ export class WhatsAppProvider extends EventEmitter {
 
   public getStatus(): {
     isReady: boolean;
+    ready: boolean;
     status: WAConnectionStatus;
+    qr: string | null;
     qrDataUrl: string | null;
     panitiaContact: string;
+    user?: { id: string; name?: string } | null;
   } {
     return {
       isReady: this.isReady,
+      ready: this.isReady,
       status: this.status,
+      qr: this.currentQrCode,
       qrDataUrl: this.currentQrDataUrl,
-      panitiaContact: APP_CONFIG.panitiaWaNumber
+      panitiaContact: APP_CONFIG.panitiaWaNumber,
+      user: this.client?.info ? { id: this.client.info.wid?._serialized || '', name: this.client.info.pushname } : null
     };
   }
 

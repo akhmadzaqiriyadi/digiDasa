@@ -10,12 +10,19 @@ export const WhatsAppUserSchema = z.object({
 }).nullable().optional();
 
 export const WhatsAppStatusDataSchema = z.object({
-  status: z.enum(['DISCONNECTED', 'CONNECTING', 'QR_READY', 'CONNECTED', 'READY', 'UNKNOWN']).or(z.string()),
-  ready: z.boolean(),
+  status: z.string(),
+  ready: z.boolean().optional().default(false),
+  isReady: z.boolean().optional().default(false),
   pairingCode: z.string().nullable().optional(),
   qr: z.string().nullable().optional(),
-  user: WhatsAppUserSchema
-});
+  qrDataUrl: z.string().nullable().optional(),
+  panitiaContact: z.string().nullable().optional(),
+  user: WhatsAppUserSchema.optional()
+}).transform((val) => ({
+  ...val,
+  ready: Boolean(val.ready || val.isReady),
+  isReady: Boolean(val.isReady || val.ready)
+}));
 
 export const WhatsAppStatusResponseSchema = z.object({
   success: z.boolean(),

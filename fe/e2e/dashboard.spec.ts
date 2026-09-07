@@ -23,6 +23,13 @@ test.describe('Dashboard Admin & Operasional', () => {
     // Verify form uji pesan WhatsApp
     await expect(page.getByText(/Uji Coba Pengiriman Pesan/i)).toBeVisible();
     await expect(page.getByPlaceholder(/628123456789/i)).toBeVisible();
+
+    // Verify QR Code image is rendered when in SCAN_QR state
+    const qrImg = page.locator('img[alt="WhatsApp QR Code"]');
+    const waitingScan = page.getByText(/MENUNGGU SCAN QR/i);
+    if (await waitingScan.isVisible()) {
+      await expect(qrImg).toBeVisible();
+    }
   });
 
   test('harus menampilkan tab kurikulum jurusan, FAQ, dan form tambah entitas', async ({ page }) => {
