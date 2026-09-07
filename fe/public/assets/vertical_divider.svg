@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="320" viewBox="0 0 32 320" fill="none">
+  <!-- Top glow line -->
+  <line x1="16" y1="10" x2="16" y2="135" stroke="url(#gradOrange)" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round"/>
+  
+  <!-- Center Badge / Indicator -->
+  <circle cx="16" cy="160" r="14" fill="#1c1917" stroke="#f97316" stroke-width="2.5"/>
+  <circle cx="16" cy="160" r="6" fill="#fb923c"/>
+  <path d="M12 160H20" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Bottom glow line -->
+  <line x1="16" y1="185" x2="16" y2="310" stroke="url(#gradOrange)" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round"/>
+
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradOrange" x1="16" y1="0" x2="16" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fb923c" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#ea580c" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#fb923c" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+</svg>
