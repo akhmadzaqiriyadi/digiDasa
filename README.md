@@ -300,21 +300,16 @@ npm run format
 
 ## 🏫 Profil & Kampus SMK Negeri 1 Adiwerna (STM ADB)
 
+> [!NOTE]
+> **Pemisah Fisik Bangunan:** Di bawah ini merupakan dokumentasi 2 (dua) fasilitas fisik bangunan yang berbeda di lingkungan SMK Negeri 1 Adiwerna (STM ADB) dengan garis pembatas visual:
+
 <div align="center">
-  <table align="center" style="width: 100%; border: none;">
-    <tr align="center" style="border: none;">
-      <td style="border: none; padding: 10px; text-align: center;">
-        <img src="./docs/assets/gedung_gerbang.png" alt="Gerbang Utama SMK Negeri 1 Adiwerna (STM ADB)" width="420" style="border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);" />
-        <br />
-        <sub><strong>🚪 Gerbang Utama & Portal Masuk (STM ADB)</strong></sub>
-      </td>
-      <td style="border: none; padding: 10px; text-align: center;">
-        <img src="./docs/assets/gedung_utama.jpg" alt="Gedung Pembelajaran & Laboratorium TEFA" width="420" style="border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);" />
-        <br />
-        <sub><strong>🏢 Gedung Pembelajaran, Laboratorium & TEFA</strong></sub>
-      </td>
-    </tr>
-  </table>
+
+| 🚪 **GEDUNG 1: GERBANG UTAMA (STM ADB)** | ⚡ **GARIS PEMISAH BANGUNAN** ⚡ | 🏢 **GEDUNG 2: KOMPLEKS KELAS & TEFA** |
+| :---: | :---: | :---: |
+| <img src="./docs/assets/gedung_gerbang.png" alt="Gerbang Utama SMK Negeri 1 Adiwerna (STM ADB)" width="380" /> | <img src="./docs/assets/vertical_divider.svg" alt="Pemisah Gedung" height="240" /><br/><sub>**LOKASI 1** ⟵ ❖ ⟶ **LOKASI 2**<br/>*(Fisik Bangunan Berbeda)*</sub> | <img src="./docs/assets/gedung_utama.jpg" alt="Gedung Pembelajaran & Laboratorium TEFA" width="380" /> |
+| **Gerbang Kedatangan & Pos Masuk**<br/><sub>Akses utama kedatangan siswa, pos piket satpam, tamu dinas, dan gerbang pendaftaran SPMB</sub> | ╏<br/>╏<br/>╏ | **Kompleks Ruang Kelas, Lab & Bengkel TEFA**<br/><sub>Gedung pembelajaran teori, bengkel teknik kejuruan industri, dan laboratorium komputer</sub> |
+
 </div>
 
 ---
