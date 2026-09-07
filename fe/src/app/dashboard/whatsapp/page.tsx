@@ -41,7 +41,8 @@ import {
   ShieldCheck,
   Zap,
   LogOut,
-  PowerOff
+  PowerOff,
+  Loader2
 } from 'lucide-react';
 
 export default function WhatsAppDashboardPage() {
@@ -122,9 +123,9 @@ export default function WhatsAppDashboardPage() {
                       MENUNGGU SCAN QR
                     </Badge>
                   ) : isInitializing ? (
-                    <Badge variant="outline" className="border-blue-500 text-blue-600 text-[11px] gap-1">
-                      <RefreshCw className="h-3 w-3 animate-spin" />
-                      MENYIAPKAN BROWSER...
+                    <Badge variant="outline" className="border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] gap-1.5 font-medium">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
+                      MENYIAPKAN BROWSER
                     </Badge>
                   ) : isError ? (
                     <Badge variant="destructive" className="text-[11px] gap-1">
@@ -419,15 +420,25 @@ export default function WhatsAppDashboardPage() {
                   </div>
                 </div>
               ) : status === 'INITIALIZING' || connectMutation.isPending ? (
-                <div className="flex flex-col items-center text-center py-10 space-y-3">
-                  <RefreshCw className="h-10 w-10 text-orange-500 animate-spin" />
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">
+                <div className="flex flex-col items-center text-center py-10 space-y-4">
+                  <div className="relative flex items-center justify-center">
+                    <div className="h-20 w-20 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-inner">
+                      <QrCode className="h-10 w-10 text-orange-500 animate-pulse" />
+                    </div>
+                    <div className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-background border border-border shadow-xs flex items-center justify-center">
+                      <Loader2 className="h-3.5 w-3.5 text-orange-500 animate-spin" />
+                    </div>
+                  </div>
+                  <div className="space-y-1 max-w-sm">
+                    <h3 className="text-sm font-bold text-foreground">
                       Menyiapkan Sesi &amp; QR Code...
                     </h3>
-                    <p className="text-xs text-muted-foreground max-w-sm mt-1">
+                    <p className="text-xs text-muted-foreground">
                       Sedang menginisialisasi browser Chromium headless. QR Code akan muncul dalam beberapa detik...
                     </p>
+                  </div>
+                  <div className="w-48 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-orange-500 rounded-full animate-pulse w-3/4" />
                   </div>
                 </div>
               ) : status === 'ERROR' ? (
