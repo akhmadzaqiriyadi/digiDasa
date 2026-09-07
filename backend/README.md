@@ -1,7 +1,18 @@
-# ⚙️ ADAPTIVA-BOT: Backend REST API & Cognitive Core Engine
+<div align="center">
+  <img src="../docs/assets/hero_banner.jpg" alt="ADAPTIVA-BOT Hero Banner" width="100%" style="border-radius: 16px; margin-bottom: 20px;" />
 
-> **Headless API & Cognitive Engine Service untuk ADAPTIVA-BOT**  
-> Melayani pemrosesan kecerdasan buatan, gateway WhatsApp Web, basis data relasional PostgreSQL, dan antarmuka REST API untuk dikonsumsi oleh antarmuka pengguna **Frontend (`fe/`)**. Proyek Tim **SMK Negeri 1 Adiwerna (STM ADB)** dalam Program **DIGIForward 2026–2027**.
+  # ⚙️ ADAPTIVA-BOT: Backend REST API & Cognitive Core Engine
+
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Express](https://img.shields.io/badge/Express-v5.2-black?logo=express&logoColor=white)](https://expressjs.com/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-5432-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![Prisma ORM](https://img.shields.io/badge/Prisma-v6.4-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+  [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-8E75B2?logo=google&logoColor=white)](https://ai.google.dev/)
+  [![Vitest](https://img.shields.io/badge/Vitest-24%2F24%20Tests-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
+
+  <p><strong>Headless API & Cognitive Engine Service untuk ADAPTIVA-BOT</strong></p>
+  <p>Melayani pemrosesan kecerdasan buatan, gateway WhatsApp Web, basis data relasional PostgreSQL, dan antarmuka REST API untuk dikonsumsi oleh antarmuka pengguna <strong>Frontend (<code>fe/</code>)</strong>. Proyek Tim <strong>SMK Negeri 1 Adiwerna (STM ADB)</strong> dalam Program <strong>DIGIForward 2026–2027</strong>.</p>
+</div>
 
 ---
 

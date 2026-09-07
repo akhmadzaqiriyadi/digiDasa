@@ -1,7 +1,20 @@
-# 🚀 ADAPTIVA-BOT: Cognitive Automation AI & Agile Architecture
+<div align="center">
+  <img src="./docs/assets/hero_banner.jpg" alt="ADAPTIVA-BOT Hero Banner" width="100%" style="border-radius: 16px; margin-bottom: 20px;" />
 
-> **Asisten Informasi Digital Sekolah 24/7 Berbasis WhatsApp & Cognitive AI Grounded**  
-> Proyek Inovasi Layanan Publik Pendidikan untuk Tim **SMK Negeri 1 Adiwerna (STM ADB) - Tim Adaptiva** dalam Program **DIGIForward 2026–2027** *(PT Generasi Edukator Indonesia & CTI Group)*.
+  # 🚀 ADAPTIVA-BOT: Cognitive Automation AI & Agile Architecture
+
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Node.js](https://img.shields.io/badge/Node.js-v20+-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+  [![Express](https://img.shields.io/badge/Express-v5.2-black?logo=express&logoColor=white)](https://expressjs.com/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-5432-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![Prisma ORM](https://img.shields.io/badge/Prisma-v6.4-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+  [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-8E75B2?logo=google&logoColor=white)](https://ai.google.dev/)
+  [![Vitest E2E](https://img.shields.io/badge/Vitest-24%2F24%20Passing%20(100%25)-brightgreen?logo=vitest&logoColor=white)](https://vitest.dev/)
+  [![API Docs](https://img.shields.io/badge/Scalar%20UI-API%20Reference-purple)](http://localhost:3000/reference)
+
+  <p><strong>Asisten Informasi Digital Sekolah 24/7 Berbasis WhatsApp & Cognitive AI Grounded</strong></p>
+  <p>Proyek Inovasi Layanan Publik Pendidikan untuk Tim <strong>SMK Negeri 1 Adiwerna (STM ADB) - Tim Adaptiva</strong> dalam Program <strong>DIGIForward 2026–2027</strong> (PT Generasi Edukator Indonesia & CTI Group).</p>
+</div>
 
 ---
 
@@ -22,73 +35,9 @@ Seluruh berkas dokumen perencanaan, lembar kerja, panduan teknis, dan PDF resmi 
 
 ADAPTIVA-BOT dirancang dengan arsitektur **Monorepo Modern**, memisahkan secara tegas antara **Frontend Client (`fe/`)**, **Backend Core Engine (`backend/`)**, **WhatsApp Web Gateway**, **Cognitive AI Grounding Layer**, dan **Data Persistence Layer**.
 
-```
-+-----------------------------------------------------------------------------------------------------------------+
-|                                           PRESENTATION & CLIENT LAYER                                           |
-|                                                                                                                 |
-|   +---------------------------------+   +---------------------------------------+   +-----------------------+   |
-|   |   📱 Calon Siswa & Orang Tua    |   |   🌐 Frontend Client App (`fe/`)      |   |   📖 Scalar UI Docs   |   |
-|   |   - WhatsApp Mobile / Desktop   |   |   - Dashboard Monitoring & Analitik   |   |   - Interactive API   |   |
-|   |   - Tanya Info SPP, Jurusan, SK |   |   - WhatsApp QR Scanner Interface     |   |     Documentation     |   |
-|   |                                 |   |   - Dynamic Knowledge Manager (CRUD)  |   |     (/reference)      |   |
-|   |                                 |   |   - Escalation Ticket Resolver Center |   |                       |   |
-|   |                                 |   |   - Web Chatbot Widget (Situs Sekolah)|   |                       |   |
-|   +----------------+----------------+   +-------------------+-------------------+   +-----------+-----------+   |
-+--------------------|----------------------------------------|-----------------------------------|---------------+
-                     |                                        | HTTP / JSON REST API              |
-+--------------------v----------------------------------------v-----------------------------------v---------------+
-|                                            INTERFACE & GATEWAY LAYER                                            |
-|                                                                                                                 |
-|   +-------------------------------------+                +--------------------------------------------------+   |
-|   |   📱 WhatsApp Web Gateway           |                |   ⚙️ Express 5 Pure REST API Engine              |   |
-|   |   (whatsapp-web.js Chromium Engine) |   Internal     |   (Headless JSON Endpoints v1)                   |   |
-|   |   - Headless Session & LocalAuth    |--------------> |   - Rate Limiter, CORS, Request Logger           |   |
-|   |   - Event: qr, ready, message_create|                |   - OpenAPI 3.0 Contract & Zod Validation        |   |
-|   +------------------+------------------+                +------------------------+-------------------------+   |
-+----------------------|------------------------------------------------------------|-----------------------------+
-                       |                                                            |
-+----------------------v------------------------------------------------------------v-----------------------------+
-|                                         DOMAIN CORE & BUSINESS LOGIC LAYER                                      |
-|                                                                                                                 |
-|  +-------------------+  +--------------------+  +--------------------+  +-------------------+  +--------------+ |
-|  |    Chat Module    |  |  Knowledge Module  |  |   Ticket Module    |  |  WhatsApp Module  |  |  Formatter   | |
-|  |  - Conversational |  |  - Dynamic Entities|  |  - Auto-Escalation |  |  - Client State   |  |  - WhatsApp   | |
-|  |    Sliding Memory |  |    CRUD & Filtering|  |  - Ticket Resolver |  |    Event Handlers |  |    Markdown   | |
-|  |  - DTO Validation |  |  - Dual-Layer Cache|  |  - wa.me Handover  |  |  - Status Monitor |  |    Normalizer | |
-|  +---------+---------+  +---------+----------+  +---------+----------+  +---------+---------+  +------+-------+ |
-+------------|----------------------|-----------------------|-----------------------|-------------------|---------+
-             |                      |                       |                       |                   |
-+------------v----------------------v-----------------------v-----------------------v-------------------v---------+
-|                                     COGNITIVE AI & KNOWLEDGE GROUNDING LAYER                                    |
-|                                                                                                                 |
-|   +-------------------------------------+           +-------------------------------------------------------+   |
-|   |   Primary Provider:                 |           |   Secondary Local Fallback:                           |   |
-|   |   Google Gemini 2.5 Flash           |           |   Semantic In-Memory Fallback Engine                  |   |
-|   |   (Grounded ke SK SPMB 2026/2027)   |           |   (Deterministic Keyword Scoring < 1ms, Zero Offline) |   |
-|   +------------------+------------------+           +---------------------------+---------------------------+   |
-|                      |                                                          |                               |
-|                      +----------------------------+-----------------------------+                               |
-|                                                   |                                                             |
-|                                     +-------------v--------------+                                              |
-|                                     |  PromptEngine Synthesizer  |                                              |
-|                                     |  (System Prompt + Grounding|                                              |
-|                                     +-------------+--------------+                                              |
-+---------------------------------------------------|-------------------------------------------------------------+
-                                                    |
-+---------------------------------------------------v-------------------------------------------------------------+
-|                                         DATA PERSISTENCE & STORAGE LAYER                                        |
-|                                                                                                                 |
-|       +-------------------------------+                   +---------------------------------------------+       |
-|       |   Prisma ORM Client v6.4      |                   |   In-Memory Synchronized Knowledge Cache    |       |
-|       |   (Type-safe Query Engine)    |                   |   (Fast-read Grounding Data untuk AI)       |       |
-|       +---------------+---------------+                   +----------------------+----------------------+       |
-|                       |                                                          |                              |
-|       +---------------v----------------------------------------------------------v----------------------+       |
-|       |                              PostgreSQL Database (Port 5432)                                    |       |
-|       |   Tables: Knowledge, Jurusan, Faq, KnowledgeEntity, ChatSession, ChatMessage, EscalationTicket   |       |
-|       +-------------------------------------------------------------------------------------------------+       |
-+-----------------------------------------------------------------------------------------------------------------+
-```
+<div align="center" style="margin: 30px 0;">
+  <img src="./docs/assets/architecture.jpg" alt="ADAPTIVA-BOT System Architecture Infographic" width="100%" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+</div>
 
 ---
 
