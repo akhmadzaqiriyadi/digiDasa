@@ -89,6 +89,19 @@ export class ChatController {
     }
   }
 
+  public static async syncKnowledge(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const synced = await knowledgeRepository.syncFromDb();
+      ApiResponse.success(
+        res,
+        synced,
+        'Sinkronisasi basis data PostgreSQL berhasil!'
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
   public static getSystemStatus(_req: Request, res: Response, next: NextFunction): void {
     try {
       const waStatus = whatsAppProvider.getStatus();

@@ -11,6 +11,7 @@ apiRouter.post('/chat', ChatController.handleChat);
 // Knowledge Base Root Endpoints (Full summary & Bulk sync)
 apiRouter.get('/knowledge', ChatController.getKnowledge);
 apiRouter.put('/knowledge', ChatController.updateKnowledge);
+apiRouter.post('/knowledge/sync', ChatController.syncKnowledge);
 
 // Dynamic Knowledge Entities (CRUD + Pagination + Filter)
 apiRouter.get('/knowledge/entities', KnowledgeController.getEntities);
