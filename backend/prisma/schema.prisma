@@ -1,0 +1,140 @@
+// Prisma Schema for ADAPTIVA-BOT (SMK Negeri 1 Adiwerna) - PostgreSQL Production Architecture
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SchoolInfo {
+  id           String   @id @default("school-core")
+  name         String
+  address      String
+  academicYear String
+  phone        String
+  spmbWhatsapp String
+  email        String
+  website      String
+  lastUpdated  String
+  skNumber     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Jurusan {
+  id           String   @id @default(uuid())
+  kode         String   @unique
+  nama         String
+  kuota        Int
+  deskripsi    String
+  prospekKerja String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AdmissionSchedule {
+  id        String   @id @default(uuid())
+  tahap     String
+  tanggal   String
+  tempat    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JalurPendaftaran {
+  id          String   @id @default(uuid())
+  jalur       String
+  kuotaPersen String
+  syarat      String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SyaratDokumen {
+  id        String   @id @default(uuid())
+  dokumen   String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BiayaInfo {
+  id                  String   @id @default("biaya-core")
+  sppNominal          Int      @default(0)
+  sppKeterangan       String
+  daftarUlangNominal  Int      @default(0)
+  daftarUlangKeterangan String
+  seragamPutra        Int      @default(0)
+  seragamPutri        Int      @default(0)
+  seragamOpsi         String
+  seragamRincian      String   // JSON string of item list
+  keringananBeasiswa  String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model FaqItem {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String   @default("UMUM")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EscalationTicket {
+  id         String    @id @default(uuid())
+  ticketCode String    @unique // e.g. TCK-123456
+  sender     String
+  name       String
+  issue      String
+  status     String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  chatLogs   ChatLog[]
+}
+
+model ChatLog {
+  id                      String            @id @default(uuid())
+  sender                  String
+  message                 String
+  reply                   String
+  source                  String            // gemini-2.5-flash, local-semantic-engine
+  latencyMs               Int               @default(0)
+  requiresHumanEscalation Boolean           @default(false)
+  createdAt               DateTime          @default(now())
+
+  ticketId                String?
+  ticket                  EscalationTicket? @relation(fields: [ticketId], references: [id])
+}
+
+model GoogleSheetsSyncLog {
+  id        String   @id @default(uuid())
+  sheetUrl  String?
+  status    String   // SUCCESS, FAILED
+  syncedAt  DateTime @default(now())
+  records   Int      @default(0)
+}
+
+model KnowledgeEntity {
+  id        String   @id @default(uuid())
+  category  String   // e.g. "PROGRAM_UNGGULAN", "BEASISWA", "KERJASAMA_INDUSTRI", "TATA_TERTIB", "EKSTRAKURIKULER", "CUSTOM"
+  title     String
+  content   String
+  tags      String?  // comma-separated tags
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+

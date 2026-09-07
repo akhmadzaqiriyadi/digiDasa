@@ -1,0 +1,25 @@
+{
+  "name": "digidasa-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ADAPTIVA-BOT: Cognitive Automation AI & Agile Architecture - SMK Negeri 1 Adiwerna",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix backend run build",
+    "build:backend": "npm --prefix backend run build",
+    "start": "npm --prefix backend run start",
+    "test": "npm --prefix backend run test",
+    "test:watch": "npm --prefix backend run test:watch",
+    "typecheck": "npm --prefix backend run typecheck",
+    "lint": "npm --prefix backend run lint",
+    "lint:fix": "npm --prefix backend run lint:fix",
+    "format": "npm --prefix backend run format",
+    "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:push": "npm --prefix backend run prisma:push",
+    "prisma:seed": "npm --prefix backend run prisma:seed"
+  }
+}
