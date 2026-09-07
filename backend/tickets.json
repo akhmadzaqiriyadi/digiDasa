@@ -1,0 +1,14 @@
+[
+  {
+    "id": "TCK-956915",
+    "sender": "201000963063809@lid",
+    "senderNumber": "201000963063809@lid",
+    "name": "Orang Tua / Calon Siswa (WhatsApp)",
+    "issue": "admin",
+    "reason": "Permintaan bantuan staf panitia (admin)",
+    "summary": "Pendaftar menanyakan bantuan langsung panitia via kata kunci \"admin\".",
+    "status": "OPEN",
+    "createdAt": "2026-09-07T06:52:36.915Z",
+    "updatedAt": "2026-09-07T06:52:36.915Z"
+  }
+]
