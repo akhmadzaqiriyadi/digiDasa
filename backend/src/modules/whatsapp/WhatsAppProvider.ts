@@ -285,11 +285,14 @@ export class WhatsAppProvider extends EventEmitter {
       this.lastRepliedText = response.reply;
       ticketService.recordInteraction(body, response.requiresHumanEscalation);
 
+      let replyText = response.reply;
+
       if (response.requiresHumanEscalation) {
-        ticketService.createTicket(sender, sender, body);
+        const ticket = ticketService.createTicket(sender, sender, body);
+        replyText += `\n\n🎫 *Tiket Eskalasi Terdaftar:* #${ticket.id}\n_Pesan Anda telah diteruskan ke antrean panitia di dashboard sekolah._`;
       }
 
-      const finalReply = WhatsAppFormatter.format(response.reply);
+      const finalReply = WhatsAppFormatter.format(replyText);
 
       // Send reply directly to the chat target
       if (this.client) {

@@ -187,14 +187,27 @@ export type SchoolKnowledge = z.infer<typeof SchoolKnowledgeSchema>;
 // ==========================================
 export const TicketSchema = z.object({
   id: z.string(),
-  senderNumber: z.string(),
-  reason: z.string(),
+  senderNumber: z.string().optional(),
+  sender: z.string().optional(),
+  reason: z.string().optional(),
+  issue: z.string().optional(),
+  name: z.string().optional(),
   status: z.enum(['OPEN', 'RESOLVED']).or(z.string()),
   summary: z.string().optional().nullable(),
   conversationId: z.string().optional().nullable(),
   createdAt: z.string(),
   updatedAt: z.string().optional()
-});
+}).transform((t) => ({
+  id: t.id,
+  senderNumber: t.senderNumber || t.sender || 'Unknown',
+  reason: t.reason || t.issue || 'Permintaan Eskalasi Manual',
+  name: t.name || 'Orang Tua / Calon Siswa',
+  status: t.status,
+  summary: t.summary || t.issue || t.reason || null,
+  conversationId: t.conversationId,
+  createdAt: t.createdAt,
+  updatedAt: t.updatedAt
+}));
 
 export const TicketListResponseSchema = z.object({
   success: z.boolean(),

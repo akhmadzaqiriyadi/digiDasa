@@ -52,10 +52,14 @@ export class TicketService {
     const ticket: ITicket = {
       id: `TCK-${Date.now().toString().slice(-6)}`,
       sender,
-      name: name || 'Orang Tua Murid',
+      senderNumber: sender,
+      name: name || 'Orang Tua / Calon Siswa',
       issue,
+      reason: issue,
+      summary: issue,
       status: 'OPEN',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     this.tickets.unshift(ticket);
     this.stats.escalatedToHuman++;
@@ -64,10 +68,13 @@ export class TicketService {
   }
 
   public getTickets(statusFilter?: TicketStatus): ITicket[] {
-    if (statusFilter) {
-      return this.tickets.filter((t) => t.status === statusFilter);
-    }
-    return this.tickets;
+    const list = statusFilter ? this.tickets.filter((t) => t.status === statusFilter) : this.tickets;
+    return list.map((t) => ({
+      ...t,
+      senderNumber: t.senderNumber || t.sender,
+      reason: t.reason || t.issue,
+      summary: t.summary || t.issue
+    }));
   }
 
   public updateTicketStatus(id: string, status: TicketStatus): ITicket | null {

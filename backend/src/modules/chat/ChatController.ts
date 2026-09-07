@@ -27,14 +27,20 @@ export class ChatController {
 
       ticketService.recordInteraction(message, aiResponse.requiresHumanEscalation);
 
+      let replyText = aiResponse.reply;
+      let ticketId: string | undefined;
+
       if (aiResponse.requiresHumanEscalation) {
-        ticketService.createTicket(sender, sender, message);
+        const ticket = ticketService.createTicket(sender, sender, message);
+        ticketId = ticket.id;
+        replyText += `\n\n🎫 *Tiket Eskalasi Terdaftar:* #${ticket.id}\n_Pesan Anda telah diteruskan ke antrean panitia di dashboard sekolah._`;
       }
 
       ApiResponse.success(
         res,
         {
-          reply: aiResponse.reply,
+          reply: replyText,
+          ticketId,
           source: aiResponse.source,
           confidence: aiResponse.confidence,
           isFallback: aiResponse.isFallback,

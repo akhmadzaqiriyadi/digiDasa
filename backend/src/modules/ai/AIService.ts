@@ -24,9 +24,18 @@ export class AIService implements IAIEngine {
     message: string,
     history: IChatHistoryItem[] = []
   ): Promise<IAIResponse> {
+    const trimmed = message.trim().toLowerCase();
+    const isNumericMenu = /^(no|nomor|menu|opsi)?\s*[1-5](\.)?$/i.test(trimmed);
+
+    // If user typed a quick numeric shortcut (1-5), route immediately to Local Provider for 0ms deterministic response
+    if (isNumericMenu) {
+      logger.debug(`[AIService] Fast direct route for numeric menu command: "${message}"`);
+      return await this.localProvider.generateReply(message, history);
+    }
+
     if (this.geminiProvider.isAvailable()) {
       try {
-        logger.debug('[AIService] Routing to Gemini 1.5 Flash...');
+        logger.debug('[AIService] Routing to Gemini 2.5 Flash...');
         return await this.geminiProvider.generateReply(message, history);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
