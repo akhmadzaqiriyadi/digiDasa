@@ -36,3 +36,14 @@ function handleShutdown(signal: string) {
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 process.on('SIGINT', () => handleShutdown('SIGINT'));
+
+// Process-level exception guards to keep API server resilient against 3rd-party library errors
+process.on('unhandledRejection', (reason) => {
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  logger.warn(`[Process Guard] Unhandled Rejection intercepted: ${msg}`);
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error(`[Process Guard] Uncaught Exception intercepted: ${err.message}`, { stack: err.stack });
+});
+

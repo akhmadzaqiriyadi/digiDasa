@@ -84,20 +84,26 @@ export class WhatsAppProvider extends EventEmitter {
   }
 
   public async logout(): Promise<void> {
-    if (this.client) {
-      try {
-        await this.client.logout().catch(() => {});
-        await this.client.destroy().catch(() => {});
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logger.error('[WhatsAppProvider] Logout error: ' + msg);
-      }
-    }
+    const oldClient = this.client;
     this.client = null;
     this.isReady = false;
     this.status = 'DISCONNECTED';
     this.currentQrCode = null;
     this.currentQrDataUrl = null;
+
+    if (oldClient) {
+      try {
+        await oldClient.logout().catch(() => {});
+      } catch (err) {
+        logger.warn('[WhatsAppProvider] Client logout error: ' + err);
+      }
+      try {
+        await oldClient.destroy().catch(() => {});
+      } catch (err) {
+        logger.warn('[WhatsAppProvider] Client destroy error: ' + err);
+      }
+    }
+
     if (fs.existsSync('./.wwebjs_auth')) {
       try {
         fs.rmSync('./.wwebjs_auth', { recursive: true, force: true });
@@ -105,6 +111,7 @@ export class WhatsAppProvider extends EventEmitter {
         logger.warn('[WhatsAppProvider] Could not remove auth folder: ' + e);
       }
     }
+    this.cleanupLocks();
     logger.info('[WhatsAppProvider] WhatsApp session logged out and auth data cleared.');
     this.emit('status', this.status);
   }
@@ -191,11 +198,24 @@ export class WhatsAppProvider extends EventEmitter {
       this.emit('status', this.status);
     });
 
-    this.client.on('disconnected', (reason: string) => {
+    this.client.on('disconnected', async (reason: string) => {
       this.isReady = false;
       this.status = 'DISCONNECTED';
+      this.currentQrCode = null;
+      this.currentQrDataUrl = null;
       logger.warn('⚠️ [WhatsAppProvider] Disconnected: ' + reason);
       this.emit('status', this.status);
+
+      const oldClient = this.client;
+      this.client = null;
+      if (oldClient) {
+        try {
+          await oldClient.destroy().catch(() => {});
+        } catch {
+          // ignore
+        }
+      }
+      this.cleanupLocks();
     });
 
     // Listen to standard incoming messages
