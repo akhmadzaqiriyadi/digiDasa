@@ -39,7 +39,7 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation Links (Clean Public & Portal Navigation) */}
+        {/* Navigation Links (Hanya Portal Publik & Dashboard Admin) */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
           <Link
             href="/"
@@ -49,37 +49,22 @@ export function Navbar() {
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            Beranda
+            Portal Publik
           </Link>
           <Link
-            href="/#jurusan"
-            className="px-3 py-2 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+            href="/dashboard"
+            className={`px-3 py-2 rounded-md transition-colors ${
+              pathname?.startsWith('/dashboard')
+                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
           >
-            Konsentrasi Keahlian
-          </Link>
-          <Link
-            href="/#faq"
-            className="px-3 py-2 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            SPMB FAQ
+            Dashboard Admin
           </Link>
         </nav>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          <Link href="/dashboard" className="hidden sm:inline-flex">
-            <Button
-              variant={pathname?.startsWith('/dashboard') ? 'default' : 'outline'}
-              size="sm"
-              className={`text-xs gap-1.5 ${
-                pathname?.startsWith('/dashboard')
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                  : ''
-              }`}
-            >
-              Pusat Kendali Bot
-            </Button>
-          </Link>
 
           <a
             href="http://localhost:3000/reference"

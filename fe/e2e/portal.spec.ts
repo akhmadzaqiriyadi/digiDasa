@@ -15,11 +15,10 @@ test.describe('Portal Publik & SPMB', () => {
     await expect(nav.getByRole('link', { name: 'Knowledge Base' })).toHaveCount(0);
     await expect(nav.getByRole('link', { name: 'Tiket Eskalasi' })).toHaveCount(0);
 
-    // Verify correct public navbar links
-    await expect(nav.getByRole('link', { name: 'Beranda' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Konsentrasi Keahlian' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'SPMB FAQ' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Pusat Kendali Bot' })).toBeVisible();
+    // Verify that navbar only has Portal Publik and Dashboard Admin
+    await expect(nav.getByRole('link', { name: 'Portal Publik' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Dashboard Admin' })).toBeVisible();
+    await expect(nav.locator('a')).toHaveCount(2);
     await expect(page.getByRole('link', { name: 'Chat WhatsApp Bot', exact: true })).toBeVisible();
 
     // 2. Hero Section checks
