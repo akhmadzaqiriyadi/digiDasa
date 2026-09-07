@@ -13,6 +13,7 @@ export function Footer() {
                   src="/assets/logo_smk.png"
                   alt="SMK Negeri 1 Adiwerna"
                   fill
+                  sizes="36px"
                   className="object-contain"
                 />
               </div>

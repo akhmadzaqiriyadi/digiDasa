@@ -21,6 +21,7 @@ export function Navbar() {
               src="/assets/logo_smk.png"
               alt="Logo SMK Negeri 1 Adiwerna"
               fill
+              sizes="40px"
               className="object-contain p-0.5"
             />
           </div>
